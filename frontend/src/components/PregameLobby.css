@@ -1,0 +1,105 @@
+.pregame-lobby {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.pregame-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.pregame-header h2 {
+  font-size: 1.1rem;
+}
+
+.pregame-header p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.pregame-teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.pregame-team {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 0.6rem;
+}
+
+.pregame-team.red {
+  border: 1px solid rgba(255, 70, 85, 0.3);
+}
+
+.pregame-team.blue {
+  border: 1px solid rgba(70, 130, 255, 0.3);
+}
+
+.pregame-team h3 {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.pregame-player {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 0.3rem 0;
+}
+
+.pregame-agent {
+  color: #9cd2ff;
+}
+
+.pregame-name {
+  color: #fff;
+}
+
+.pregame-state {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.6px;
+  padding: 0.15rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pregame-state.locked {
+  color: #86ffb0;
+  border-color: rgba(134, 255, 176, 0.5);
+}
+
+.pregame-state.hovering {
+  color: #ffd27e;
+  border-color: rgba(255, 210, 126, 0.5);
+}
+
+.pregame-vtl-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.14rem 0.42rem;
+  background: linear-gradient(135deg, #00ccff 0%, #0099cc 100%);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .pregame-teams {
+    grid-template-columns: 1fr;
+  }
+}
