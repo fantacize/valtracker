@@ -237,6 +237,18 @@ function PlayerCard({ player, selectedWeapons = [] }) {
 
   return (
     <div className="player-card">
+      {player.partyBadge && (
+        <div
+          className="party-badge"
+          style={{
+            '--party-color': player.partyBadge.color
+          }}
+          title={`Party ${player.partyBadge.partyNumber}`}
+          aria-label={`Party ${player.partyBadge.partyNumber}`}
+        >
+          {player.partyBadge.label}
+        </div>
+      )}
       <div className="player-header">
         <div className="player-info">
           <div className="player-name-row">

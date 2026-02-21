@@ -216,12 +216,21 @@ class HenrikService {
         const enabled = typeof item.enabled === 'boolean'
           ? item.enabled
           : ['enabled', 'open', 'active', 'available'].includes(status);
+        const partySize = item.party_size || item.partySize || null;
+        const minPartySize = partySize
+          ? (partySize.min_size ?? partySize.minSize ?? null)
+          : (item.min_party_size ?? item.minPartySize ?? null);
+        const maxPartySize = partySize
+          ? (partySize.max_size ?? partySize.maxSize ?? null)
+          : (item.max_party_size ?? item.maxPartySize ?? null);
 
         return {
           queue,
           status,
           enabled,
-          reason: item.reason || null
+          reason: item.reason || null,
+          minPartySize,
+          maxPartySize
         };
       });
 
@@ -236,6 +245,31 @@ class HenrikService {
         return null;
       }
       console.error('Henrik queue status API error:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Get a match by ID
+   * Henrik docs: /valorant/v4/match/{region}/{matchid}
+   */
+  async getMatchById(region = 'na', matchId) {
+    if (!matchId) return null;
+
+    try {
+      const response = await this.queuedGet(
+        `${this.baseUrl}/valorant/v4/match/${region}/${matchId}`
+      );
+      return response?.data?.data || null;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return null;
+      }
+      if (error.response?.status === 429) {
+        this.rateLimitedUntil = Date.now() + 60 * 1000;
+        return null;
+      }
+      console.error('Henrik match API error:', error.message);
       return null;
     }
   }

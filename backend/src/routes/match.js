@@ -65,6 +65,162 @@ const getAgentName = (characterId) => {
   return AGENT_NAME_BY_UUID[String(characterId).toLowerCase()] || 'Unknown Agent';
 };
 
+const toNumber = (value, fallback = 0) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+const toNullableNumber = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+const safeString = (value, fallback = '') => {
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+};
+
+const parseHenrikMode = (modeValue) => {
+  if (typeof modeValue === 'string') return modeValue;
+  return safeString(
+    modeValue?.mode_id
+    || modeValue?.modeId
+    || modeValue?.name
+    || modeValue?.id
+    || modeValue?.code,
+    'Unknown Mode'
+  );
+};
+
+const parseHenrikMap = (mapValue) => {
+  if (typeof mapValue === 'string') return mapValue;
+  return safeString(
+    mapValue?.name
+    || mapValue?.map_id
+    || mapValue?.mapId
+    || mapValue?.id
+    || mapValue?.code,
+    'Unknown Map'
+  );
+};
+
+const inferQueueFromModeId = (modeId) => {
+  const raw = String(modeId || '').toLowerCase();
+  if (!raw) return null;
+  if (raw.includes('quickbomb') || raw.includes('unrated')) return 'unrated';
+  if (raw.includes('competitive') || raw.includes('bomb')) return 'competitive';
+  if (raw.includes('swiftplay')) return 'swiftplay';
+  if (raw.includes('spikerush')) return 'spikerush';
+  if (raw.includes('deathmatch')) return 'deathmatch';
+  if (raw.includes('escalation')) return 'escalation';
+  if (raw.includes('replication')) return 'replication';
+  return null;
+};
+
+const normalizeTeamId = (teamRaw) => {
+  const v = String(teamRaw || '').toLowerCase();
+  if (v === 'red') return 'Red';
+  if (v === 'blue') return 'Blue';
+  return null;
+};
+
+const defaultAttackingTeamForRound = (roundNumber) => {
+  const r = Number(roundNumber || 0);
+  if (!Number.isFinite(r) || r <= 0) return 'Red';
+  if (r <= 12) return 'Red';
+  if (r <= 24) return 'Blue';
+  // OT fallback: alternate each round, starting with Red at round 25.
+  return ((r - 25) % 2 === 0) ? 'Red' : 'Blue';
+};
+
+const sideForTeamAtRound = (teamId, roundNumber, attackingTeam = null) => {
+  const team = normalizeTeamId(teamId);
+  if (!team) return 'attack';
+  const attacker = normalizeTeamId(attackingTeam) || defaultAttackingTeamForRound(roundNumber);
+  return team === attacker ? 'attack' : 'defense';
+};
+
+const extractCoreGameRound = (matchData = {}) => {
+  const directRound = toNumber(
+    matchData?.Round
+    ?? matchData?.RoundNumber
+    ?? matchData?.round
+    ?? matchData?.roundNumber,
+    0
+  );
+  if (directRound > 0) return directRound;
+
+  const teams = Array.isArray(matchData?.Teams) ? matchData.Teams : [];
+  let inferred = 0;
+  for (const team of teams) {
+    const played = toNumber(team?.RoundsPlayed ?? team?.roundsPlayed, 0);
+    const won = toNumber(team?.RoundsWon ?? team?.roundsWon, 0);
+    const lost = toNumber(team?.RoundsLost ?? team?.roundsLost, 0);
+    const total = Math.max(played, won + lost);
+    inferred = Math.max(inferred, total);
+  }
+
+  return inferred;
+};
+
+const normalizeSeasonToken = (value) => String(value || '').trim().toLowerCase();
+
+const extractSeasonTokensFromMatch = (match = {}) => {
+  const season = match?.metadata?.season || {};
+  const tokens = new Set();
+  const values = [
+    season?.id,
+    season?.short,
+    season?.name,
+    match?.season_id,
+    match?.seasonId,
+    match?.season
+  ];
+  for (const v of values) {
+    const token = normalizeSeasonToken(v);
+    if (token) tokens.add(token);
+  }
+  return tokens;
+};
+
+const computeSeasonKdFromHenrikMatches = (matches, puuid, seasonTokens = new Set()) => {
+  const list = Array.isArray(matches) ? matches : [];
+  let kills = 0;
+  let deaths = 0;
+  let matchedGames = 0;
+
+  for (const match of list) {
+    if (seasonTokens.size > 0) {
+      const matchTokens = extractSeasonTokensFromMatch(match);
+      let intersects = false;
+      for (const token of matchTokens) {
+        if (seasonTokens.has(token)) {
+          intersects = true;
+          break;
+        }
+      }
+      if (!intersects && matchTokens.size > 0) continue;
+    }
+
+    const players = Array.isArray(match?.players?.all_players)
+      ? match.players.all_players
+      : Array.isArray(match?.players)
+        ? match.players
+        : [];
+    const me = players.find((p) => (p?.puuid || p?.subject) === puuid);
+    if (!me) continue;
+
+    kills += toNumber(me?.stats?.kills, 0);
+    deaths += toNumber(me?.stats?.deaths, 0);
+    matchedGames += 1;
+  }
+
+  if (matchedGames <= 0) return null;
+  if (deaths <= 0) return Number(kills.toFixed(2));
+  return Number((kills / deaths).toFixed(2));
+};
+
 /**
  * GET /api/match/status
  * Check if VALORANT is running
@@ -311,6 +467,55 @@ router.get('/current', async (req, res) => {
     }
     const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
 
+    // Henrik v4 match has party_id for each player, which we use to tag parties.
+    let partyIdByPuuid = {};
+    let queuePartyLimits = null;
+    try {
+      const queueStatusCacheKey = `queue_status_${(user.region || 'na').toLowerCase()}`;
+      let queueStatusPayload = cacheService.get(queueStatusCacheKey);
+      if (!queueStatusPayload) {
+        const fetchedQueueStatus = await henrikService.getQueueStatus(user.region || 'na');
+        if (fetchedQueueStatus) {
+          queueStatusPayload = {
+            region: user.region || 'na',
+            queues: fetchedQueueStatus.queues || [],
+            timestamp: Date.now()
+          };
+          cacheService.set(queueStatusCacheKey, queueStatusPayload, 60 * 1000);
+        }
+      }
+
+      const henrikMatch = await henrikService.getMatchById(user.region || 'na', matchId);
+      const henrikPlayers = Array.isArray(henrikMatch?.players?.all_players)
+        ? henrikMatch.players.all_players
+        : Array.isArray(henrikMatch?.players)
+          ? henrikMatch.players
+          : [];
+      for (const hp of henrikPlayers) {
+        const puuid = hp?.puuid || hp?.subject || null;
+        if (!puuid) continue;
+        partyIdByPuuid[puuid] = hp?.party_id || hp?.partyId || null;
+      }
+
+      const inferredQueue = inferQueueFromModeId(matchData?.ModeID);
+      if (inferredQueue && Array.isArray(queueStatusPayload?.queues)) {
+        const matchedQueue = queueStatusPayload.queues.find(
+          (q) => String(q.queue || '').toLowerCase() === inferredQueue
+        );
+        if (matchedQueue) {
+          queuePartyLimits = {
+            queue: inferredQueue,
+            minPartySize: matchedQueue.minPartySize ?? null,
+            maxPartySize: matchedQueue.maxPartySize ?? null
+          };
+        }
+      }
+    } catch (partyError) {
+      console.warn('Henrik party enrichment failed:', partyError.message);
+      partyIdByPuuid = {};
+      queuePartyLimits = null;
+    }
+
     // Combine all data
     const finalPlayers = enrichedPlayers.map(player => {
       const nameData = playerNames[player.Subject];
@@ -325,6 +530,7 @@ router.get('/current', async (req, res) => {
         agentName: getAgentName(player.CharacterID),
         playerIdentity: player.PlayerIdentity,
         accountLevel: player.PlayerIdentity?.AccountLevel ?? null,
+        partyId: partyIdByPuuid[player.Subject] || null,
         yoinkStats: yoinkStatsByPuuid[player.Subject] || null,
         loadout: player.loadout
       };
@@ -334,13 +540,16 @@ router.get('/current', async (req, res) => {
     const currentUserPuuid = user.puuid;
     const currentUserPlayer = finalPlayers.find(p => p.puuid === currentUserPuuid);
     const userTeam = currentUserPlayer ? currentUserPlayer.teamId : null;
+    const round = extractCoreGameRound(matchData);
 
     const response = {
       inGame: true,
       matchId,
       map: matchData.MapID,
       mode: matchData.ModeID,
+      round,
       userTeam: userTeam, // Which team the user is on
+      queuePartyLimits,
       players: finalPlayers,
       timestamp: Date.now()
     };
@@ -385,6 +594,7 @@ router.get('/scoreboard/current', async (req, res) => {
   try {
     await hydrateAgentNameMap();
     const weaponName = String(req.query.weapon || 'Vandal');
+    const source = String(req.query.source || 'local').toLowerCase();
     const matchInfo = await valorantService.getCurrentMatch();
 
     if (!matchInfo || !matchInfo.inGame) {
@@ -395,9 +605,292 @@ router.get('/scoreboard/current', async (req, res) => {
       });
     }
 
-    const { matchId, matchData, source = 'auto' } = matchInfo;
-    const scoreboard = await valorantService.getMatchScoreboard(matchId, source);
-    const loadouts = await valorantService.getMatchLoadouts(matchId, source);
+    const { matchId, matchData } = matchInfo;
+
+    if (source === 'henrik') {
+      const user = await valorantService.getCurrentUser();
+      const region = String(user?.region || 'na').toLowerCase();
+      const liveMatch = await henrikService.getMatchById(region, matchId);
+
+      if (!liveMatch) {
+        return res.status(502).json({
+          error: 'Failed to fetch live match from Henrik API',
+          matchId,
+          region
+        });
+      }
+
+      const allPlayers = Array.isArray(liveMatch?.players?.all_players)
+        ? liveMatch.players.all_players
+        : Array.isArray(liveMatch?.players)
+          ? liveMatch.players
+          : [];
+      const puuids = allPlayers
+        .map((p) => p?.puuid || p?.subject || null)
+        .filter(Boolean);
+      const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
+      const metadata = liveMatch?.metadata || {};
+      const seasonTokens = new Set();
+      const seasonRawValues = [
+        metadata?.season?.id,
+        metadata?.season?.short,
+        metadata?.season?.name
+      ];
+      for (const value of seasonRawValues) {
+        const token = normalizeSeasonToken(value);
+        if (token) seasonTokens.add(token);
+      }
+
+      const seasonKdByPuuid = {};
+      const seasonKdCacheTtlMs = 30 * 60 * 1000;
+      const playersToHydrate = [];
+      for (const puuid of puuids) {
+        const cacheKey = `henrik_season_kd_${region}_${puuid}_${Array.from(seasonTokens).join('|') || 'current'}`;
+        const cachedKd = cacheService.get(cacheKey);
+        if (cachedKd !== null && cachedKd !== undefined) {
+          seasonKdByPuuid[puuid] = cachedKd;
+        } else {
+          playersToHydrate.push({ puuid, cacheKey });
+        }
+      }
+
+      // Limit new Henrik history lookups per request to avoid hard API throttling.
+      const hydrateLimit = 2;
+      for (const item of playersToHydrate.slice(0, hydrateLimit)) {
+        const matches = await henrikService.getMatchHistoryByPuuid(item.puuid, region, 'competitive', 20);
+        const kd = computeSeasonKdFromHenrikMatches(matches, item.puuid, seasonTokens);
+        if (kd !== null && kd !== undefined) {
+          seasonKdByPuuid[item.puuid] = kd;
+          cacheService.set(item.cacheKey, kd, seasonKdCacheTtlMs);
+        }
+      }
+      const firstKillsByPuuid = {};
+      const firstDeathsByPuuid = {};
+      const rounds = Array.isArray(liveMatch?.rounds) ? liveMatch.rounds : [];
+      const kills = Array.isArray(liveMatch?.kills) ? liveMatch.kills : [];
+      const killsByRound = new Map();
+      const attackingTeamByRound = new Map();
+      const splitByPuuid = {};
+
+      for (const p of allPlayers) {
+        const puuid = p?.puuid || p?.subject || null;
+        if (!puuid) continue;
+        splitByPuuid[puuid] = {
+          attackKills: 0,
+          attackDeaths: 0,
+          defenseKills: 0,
+          defenseDeaths: 0
+        };
+      }
+
+      for (const round of rounds) {
+        const r = toNumber(round?.id, 0);
+        if (!r) continue;
+        const plantTeam = normalizeTeamId(round?.plant?.player?.team);
+        const defuseTeam = normalizeTeamId(round?.defuse?.player?.team);
+        const attacker = plantTeam
+          || (defuseTeam ? (defuseTeam === 'Red' ? 'Blue' : 'Red') : null)
+          || defaultAttackingTeamForRound(r);
+        attackingTeamByRound.set(r, attacker);
+      }
+
+      for (const event of kills) {
+        const roundRaw = event?.round;
+        const roundNumber = Number(roundRaw);
+        if (!Number.isFinite(roundNumber)) continue;
+        if (!killsByRound.has(roundNumber)) killsByRound.set(roundNumber, []);
+        killsByRound.get(roundNumber).push(event);
+      }
+
+      for (const [, roundKills] of killsByRound.entries()) {
+        if (!Array.isArray(roundKills) || roundKills.length === 0) continue;
+        roundKills.sort(
+          (a, b) =>
+            toNumber(a?.time_in_round_in_ms, Number.MAX_SAFE_INTEGER)
+            - toNumber(b?.time_in_round_in_ms, Number.MAX_SAFE_INTEGER)
+        );
+        const firstEvent = roundKills[0];
+        const killerPuuid = firstEvent?.killer?.puuid || null;
+        const victimPuuid = firstEvent?.victim?.puuid || null;
+        if (killerPuuid) firstKillsByPuuid[killerPuuid] = (firstKillsByPuuid[killerPuuid] || 0) + 1;
+        if (victimPuuid) firstDeathsByPuuid[victimPuuid] = (firstDeathsByPuuid[victimPuuid] || 0) + 1;
+      }
+
+      for (const event of kills) {
+        const r = toNumber(event?.round, 0);
+        if (!r) continue;
+        const attacker = attackingTeamByRound.get(r) || defaultAttackingTeamForRound(r);
+        const killerPuuid = event?.killer?.puuid || null;
+        const victimPuuid = event?.victim?.puuid || null;
+        const killerTeam = normalizeTeamId(event?.killer?.team);
+        const victimTeam = normalizeTeamId(event?.victim?.team);
+
+        if (killerPuuid && splitByPuuid[killerPuuid]) {
+          const side = sideForTeamAtRound(killerTeam, r, attacker);
+          if (side === 'attack') splitByPuuid[killerPuuid].attackKills += 1;
+          else splitByPuuid[killerPuuid].defenseKills += 1;
+        }
+
+        if (victimPuuid && splitByPuuid[victimPuuid]) {
+          const side = sideForTeamAtRound(victimTeam, r, attacker);
+          if (side === 'attack') splitByPuuid[victimPuuid].attackDeaths += 1;
+          else splitByPuuid[victimPuuid].defenseDeaths += 1;
+        }
+      }
+
+      const utilByPuuid = {};
+      for (const player of allPlayers) {
+        const puuid = player?.puuid || player?.subject || null;
+        if (!puuid) continue;
+        const casts = player?.ability_casts || {};
+        utilByPuuid[puuid] = {
+          c: toNumber(casts.grenade, 0),
+          q: toNumber(casts.ability_1, 0),
+          e: toNumber(casts.ability_2, 0),
+          x: toNumber(casts.ultimate, 0)
+        };
+      }
+
+      // Fallback util derivation by summing round stats when top-level casts are absent.
+      if (Object.keys(utilByPuuid).length === 0 && rounds.length > 0) {
+        for (const round of rounds) {
+          const roundStats = Array.isArray(round?.stats) ? round.stats : [];
+          for (const row of roundStats) {
+            const puuid = row?.player?.puuid || null;
+            if (!puuid) continue;
+            if (!utilByPuuid[puuid]) {
+              utilByPuuid[puuid] = { c: 0, q: 0, e: 0, x: 0 };
+            }
+            const casts = row?.ability_casts || {};
+            utilByPuuid[puuid].c += toNumber(casts.grenade, 0);
+            utilByPuuid[puuid].q += toNumber(casts.ability_1, 0);
+            utilByPuuid[puuid].e += toNumber(casts.ability_2, 0);
+            utilByPuuid[puuid].x += toNumber(casts.ultimate, 0);
+          }
+        }
+      }
+
+      const startedAtMs = metadata?.started_at ? Date.parse(metadata.started_at) : null;
+      const elapsedByStart = Number.isFinite(startedAtMs) ? Math.max(0, Date.now() - startedAtMs) : null;
+      const elapsedByApi = toNullableNumber(metadata?.game_length_in_ms);
+      const matchDurationMs = elapsedByStart ?? elapsedByApi ?? 0;
+      const roundFromTeams = Array.isArray(liveMatch?.teams)
+        ? liveMatch.teams.reduce((sum, team) => {
+            const won = toNumber(team?.rounds?.won, 0);
+            const lost = toNumber(team?.rounds?.lost, 0);
+            return Math.max(sum, won + lost);
+          }, 0)
+        : 0;
+      const roundNumber = Math.max(roundFromTeams, rounds.length);
+
+      const players = allPlayers.map((player) => {
+        const stats = player?.stats || {};
+        const headshots = toNumber(stats.headshots, 0);
+        const bodyshots = toNumber(stats.bodyshots, 0);
+        const legshots = toNumber(stats.legshots, 0);
+        const totalShots = headshots + bodyshots + legshots;
+        const hsPct = totalShots > 0 ? Number(((headshots / totalShots) * 100).toFixed(1)) : null;
+
+        const puuid = player?.puuid || player?.subject || null;
+        const teamRaw = String(player?.team || player?.team_id || player?.teamId || 'Blue').toLowerCase();
+        const teamId = teamRaw === 'red' ? 'Red' : 'Blue';
+        const characterName = safeString(
+          player?.character
+          || player?.character_name
+          || player?.characterName
+          || player?.agent
+          || player?.agent_name
+          || player?.agentName,
+          'Unknown Agent'
+        );
+        const gameName = safeString(player?.name || player?.game_name || player?.gameName, 'Unknown');
+        const tagLine = safeString(player?.tag || player?.tag_line || player?.tagLine, '');
+        const util = utilByPuuid[puuid] || { c: 0, q: 0, e: 0, x: 0 };
+        const yoink = yoinkStatsByPuuid[puuid] || null;
+        const seasonKd = toNullableNumber(seasonKdByPuuid[puuid] ?? yoink?.kd);
+        const split = splitByPuuid[puuid] || {
+          attackKills: 0,
+          attackDeaths: 0,
+          defenseKills: 0,
+          defenseDeaths: 0
+        };
+        const attackKd = split.attackDeaths > 0
+          ? Number((split.attackKills / split.attackDeaths).toFixed(2))
+          : Number(split.attackKills.toFixed(2));
+        const defenseKd = split.defenseDeaths > 0
+          ? Number((split.defenseKills / split.defenseDeaths).toFixed(2))
+          : Number(split.defenseKills.toFixed(2));
+        const currentSide = sideForTeamAtRound(teamId, roundNumber, attackingTeamByRound.get(roundNumber));
+        const sideKdCurrent = currentSide === 'attack' ? attackKd : defenseKd;
+        const totalKills = toNumber(stats.kills, 0);
+        const totalDeaths = toNumber(stats.deaths, 0);
+        const kd = totalDeaths > 0
+          ? Number((totalKills / totalDeaths).toFixed(2))
+          : Number(totalKills.toFixed(2));
+
+        return {
+          puuid,
+          name: tagLine ? `${gameName}#${tagLine}` : gameName,
+          gameName,
+          tagLine,
+          teamId,
+          characterId: null,
+          agentName: characterName || 'Unknown Agent',
+          accountLevel: toNullableNumber(
+            player?.account_level ?? player?.accountLevel ?? player?.level
+          ),
+          seasonKd,
+          weaponSkin: null,
+          utility: util,
+          stats: {
+            kills: totalKills,
+            deaths: totalDeaths,
+            assists: toNumber(stats.assists, 0),
+            kd,
+            sideKdCurrent,
+            currentSide,
+            attackKd,
+            defenseKd,
+            attackKills: split.attackKills,
+            attackDeaths: split.attackDeaths,
+            defenseKills: split.defenseKills,
+            defenseDeaths: split.defenseDeaths,
+            score: toNumber(stats.score, 0),
+            firstKills: firstKillsByPuuid[puuid] || 0,
+            firstDeaths: firstDeathsByPuuid[puuid] || 0,
+            multi2: toNumber(stats.double_kills, 0),
+            multi3: toNumber(stats.triple_kills, 0),
+            multi4: toNumber(stats.quadra_kills, 0),
+            multi5: toNumber(stats.penta_kills, 0),
+            kpr: null,
+            kast: null,
+            esr: null,
+            srv: null,
+            hs: hsPct,
+            clutches: null
+          },
+          rawStats: {
+            ...stats
+          }
+        };
+      });
+
+      return res.json({
+        inGame: true,
+        matchId,
+        map: parseHenrikMap(metadata?.map ?? liveMatch?.map),
+        mode: parseHenrikMode(metadata?.mode ?? liveMatch?.mode),
+        round: roundNumber,
+        matchDurationMs,
+        players,
+        source: 'henrik',
+        timestamp: Date.now()
+      });
+    }
+
+    const liveSource = matchInfo.source || 'auto';
+    const scoreboard = await valorantService.getMatchScoreboard(matchId, liveSource);
+    const loadouts = await valorantService.getMatchLoadouts(matchId, liveSource);
     const enrichedLoadoutPlayers = await valorantService.enrichLoadoutsWithSkinData(
       loadouts,
       matchData.Players || []
@@ -436,7 +929,7 @@ router.get('/scoreboard/current', async (req, res) => {
     };
 
     const scoreboardPlayers = scoreboard.Players || [];
-    const puuids = scoreboardPlayers.map(p => p.Subject);
+    const puuids = scoreboardPlayers.map((p) => p.Subject);
     const user = await valorantService.getCurrentUser();
     let playerNames = await valorantService.resolvePuuidsToNames(puuids);
     if (Object.keys(playerNames).length === 0) {
@@ -519,6 +1012,7 @@ router.get('/scoreboard/current', async (req, res) => {
       map: matchData.MapID,
       mode: matchData.ModeID,
       players,
+      source: liveSource,
       timestamp: Date.now()
     });
   } catch (error) {

@@ -24,6 +24,12 @@
   font-size: 0.9rem;
 }
 
+.live-meta {
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: #9ac2ff !important;
+}
+
 .live-scoreboard-actions {
   display: flex;
   align-items: center;
@@ -67,7 +73,7 @@
 
 .scoreboard-row {
   display: grid;
-  grid-template-columns: 1.7fr 1.5fr 1.3fr 1.3fr 0.7fr 0.8fr 0.7fr 0.9fr;
+  grid-template-columns: 1.5fr 0.8fr 1fr 0.8fr 0.6fr 0.6fr 1fr 2.1fr;
   gap: 0.4rem;
   padding: 0.75rem 1rem;
   align-items: center;
@@ -128,6 +134,25 @@
   color: #fff;
 }
 
+.fkfd-cell {
+  font-weight: 700;
+  color: #ffd27a;
+}
+
+.util-cell {
+  font-family: Consolas, 'Courier New', monospace;
+  letter-spacing: 0.2px;
+  color: #d8e8ff;
+  font-weight: 700;
+}
+
+.weapons-cell {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.78rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
 .kd-cell {
   display: flex;
   flex-direction: column;
@@ -148,14 +173,14 @@
 
 @media (max-width: 1100px) {
   .scoreboard-row {
-    grid-template-columns: 1.4fr 1.3fr 1.1fr 1.1fr 0.6fr 0.7fr 0.6fr 0.8fr;
+    grid-template-columns: 1.3fr 0.75fr 0.9fr 0.75fr 0.6fr 0.6fr 0.9fr 1.6fr;
     font-size: 0.75rem;
   }
 }
 
 @media (max-width: 900px) {
   .scoreboard-row {
-    grid-template-columns: 1.4fr 1.2fr 1fr 1fr 0.7fr 0.7fr;
+    grid-template-columns: 1.3fr 0.75fr 0.9fr 0.7fr 0.6fr 0.6fr 1fr;
   }
 
   .scoreboard-row span:nth-child(n+7) {

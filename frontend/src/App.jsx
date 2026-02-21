@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import MatchOverview from './components/MatchOverview';
 import PregameLobby from './components/PregameLobby';
+import LiveTracker from './components/LiveTracker';
 import './App.css';
 
 const API_URL = 'http://localhost:3000';
@@ -19,6 +20,7 @@ const WEAPON_FILTER_OPTIONS = [
   'Phantom',
   'Vandal',
   'Marshal',
+  'Outlaw',
   'Operator',
   'Ares',
   'Odin',
@@ -43,6 +45,7 @@ function App() {
   const [authMessage, setAuthMessage] = useState('');
   const [selectedWeapons, setSelectedWeapons] = useState(['Vandal', 'Phantom']);
   const [queueTimerStartedAt, setQueueTimerStartedAt] = useState(null);
+  const [activeTab, setActiveTab] = useState('tracker');
   const prevInQueueRef = useRef(false);
 
   // Check VALORANT status
@@ -345,6 +348,29 @@ function App() {
       <header className="header">
         <div className="header-title">
           <h1>VALORANT Skin Tracker</h1>
+          <div className="tab-switch">
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'tracker' ? 'active' : ''}`}
+              onClick={() => setActiveTab('tracker')}
+            >
+              Tracker
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'live-game' ? 'active' : ''}`}
+              onClick={() => setActiveTab('live-game')}
+            >
+              Live Game
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'live-demo' ? 'active' : ''}`}
+              onClick={() => setActiveTab('live-demo')}
+            >
+              Live Demo
+            </button>
+          </div>
         </div>
         <div className="header-controls">
           <div className="status-indicator">
@@ -443,42 +469,50 @@ function App() {
       )}
 
       <main className="main-content">
-        {!status.valorantRunning && (
-          <div className="message-box warning">
-            <h2>VALORANT Not Running</h2>
-            <p>Please launch VALORANT to use the tracker.</p>
-          </div>
-        )}
-
-        {status.valorantRunning && loading && !matchData && (
-          <div className="message-box">
-            <div className="loader"></div>
-            <p>Loading match data...</p>
-          </div>
-        )}
-
-        {status.valorantRunning && !loading && !matchData && !error && (
+        {activeTab === 'live-demo' ? (
+          <LiveTracker demoMode selectedWeapons={selectedWeapons} />
+        ) : activeTab === 'live-game' ? (
+          <LiveTracker demoMode={false} selectedWeapons={selectedWeapons} />
+        ) : (
           <>
-            {pregameData?.inPregame ? (
-              <PregameLobby data={pregameData} />
-            ) : (
-              <div className="message-box info">
-                <h2>Not in a Match</h2>
-                <p>Join a match to see player skins and stats!</p>
+            {!status.valorantRunning && (
+              <div className="message-box warning">
+                <h2>VALORANT Not Running</h2>
+                <p>Please launch VALORANT to use the tracker.</p>
               </div>
             )}
+
+            {status.valorantRunning && loading && !matchData && (
+              <div className="message-box">
+                <div className="loader"></div>
+                <p>Loading match data...</p>
+              </div>
+            )}
+
+            {status.valorantRunning && !loading && !matchData && !error && (
+              <>
+                {pregameData?.inPregame ? (
+                  <PregameLobby data={pregameData} />
+                ) : (
+                  <div className="message-box info">
+                    <h2>Not in a Match</h2>
+                    <p>Join a match to see player skins and stats!</p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {error && (
+              <div className="message-box error">
+                <h2>Error</h2>
+                <p>{error}</p>
+              </div>
+            )}
+
+            {matchData && matchData.inGame && (
+              <MatchOverview matchData={matchData} selectedWeapons={selectedWeapons} />
+            )}
           </>
-        )}
-
-        {error && (
-          <div className="message-box error">
-            <h2>Error</h2>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {matchData && matchData.inGame && (
-          <MatchOverview matchData={matchData} selectedWeapons={selectedWeapons} />
         )}
       </main>
 
