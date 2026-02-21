@@ -125,3 +125,22 @@ Open `http://localhost:5173`
 - Lockfile location is hardcoded but can be changed in `lockfile.js`
 - Rate limits are handled with exponential backoff
 - Cached responses reduce API calls
+
+## Electron Desktop Wrapper (Windows)
+
+Use this if you want a standalone desktop app window (not a browser tab).
+
+### Build desktop installer/exe
+```bash
+build-electron.bat
+```
+
+This runs:
+1. `npm run electron:build:backend` (builds `release/ValorantTrackerBackend.exe` + `release/frontend-dist`)
+2. `electron-builder` (outputs installer/app in `electron-dist/`)
+
+### Run Electron locally
+```bash
+npm install
+start-electron.bat
+```

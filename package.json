@@ -1,0 +1,47 @@
+{
+  "name": "valorant-tracker-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Desktop wrapper for VALORANT Tracker",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron:start": "electron .",
+    "electron:build:backend": "npm --prefix backend run build:exe",
+    "electron:dist": "npm run electron:build:backend && electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.valorant.tracker",
+    "productName": "Valorant Tracker",
+    "directories": {
+      "output": "electron-dist"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "release/ValorantTrackerBackend.exe",
+        "to": "release/ValorantTrackerBackend.exe"
+      },
+      {
+        "from": "release/frontend-dist",
+        "to": "release/frontend-dist"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}
