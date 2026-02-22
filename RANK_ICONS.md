@@ -1,256 +1,237 @@
-# 🎖️ Rank Icons & RR Progress Bar Feature
+ rank icons & rr progress bar feature
 
-## ✨ What's New
+ what's new
 
-Your tracker now displays beautiful rank icons and an animated RR progress bar for each player!
+your tracker now displays beautiful rank icons and an animated rr progress bar for each player!
 
-## 🎨 Visual Features
+ visual features
 
-### Rank Icon
-- **64x64px** animated rank badge
-- Floating animation (subtle up/down movement)
-- Glowing shadow effect
-- Supports all ranks from Iron 1 to Radiant
+rank icon
+64x64px animated rank badge
+floating animation (subtle up/down movement)
+glowing shadow effect
+supports all ranks from iron 1 to radiant
 
-### RR Progress Bar
-- Shows **current RR out of 100**
-- Green gradient fill (00ff88 → 00cc66)
-- Animated fill with smooth transitions
-- Text overlay showing "XX / 100 RR"
-- Glowing effect on the filled portion
+rr progress bar
+shows current rr out of 100
+green gradient fill (00ff88  00cc66)
+animated fill with smooth transitions
+text overlay showing "xx / 100 rr"
+glowing effect on the filled portion
 
-## 🏅 Supported Ranks
+ supported ranks
 
-All 23 competitive ranks are supported:
+all 23 competitive ranks are supported:
 
-### Radiant
-- `Radiant_Rank.png`
+radiant
+radiant_rank.png
 
-### Immortal
-- `Immortal_1_Rank.png`
-- `Immortal_2_Rank.png`
-- `Immortal_3_Rank.png`
+immortal
+immortal_1_rank.png
+immortal_2_rank.png
+immortal_3_rank.png
 
-### Ascendant
-- `Ascendant_1_Rank.png`
-- `Ascendant_2_Rank.png`
-- `Ascendant_3_Rank.png`
+ascendant
+ascendant_1_rank.png
+ascendant_2_rank.png
+ascendant_3_rank.png
 
-### Diamond
-- `Diamond_1_Rank.png`
-- `Diamond_2_Rank.png`
-- `Diamond_3_Rank.png`
+diamond
+diamond_1_rank.png
+diamond_2_rank.png
+diamond_3_rank.png
 
-### Platinum
-- `Platinum_1_Rank.png`
-- `Platinum_2_Rank.png`
-- `Platinum_3_Rank.png`
+platinum
+platinum_1_rank.png
+platinum_2_rank.png
+platinum_3_rank.png
 
-### Gold
-- `Gold_1_Rank.png`
-- `Gold_2_Rank.png`
-- `Gold_3_Rank.png`
+gold
+gold_1_rank.png
+gold_2_rank.png
+gold_3_rank.png
 
-### Silver
-- `Silver_1_Rank.png`
-- `Silver_2_Rank.png`
-- `Silver_3_Rank.png`
+silver
+silver_1_rank.png
+silver_2_rank.png
+silver_3_rank.png
 
-### Bronze
-- `Bronze_1_Rank.png`
-- `Bronze_2_Rank.png`
-- `Bronze_3_Rank.png`
+bronze
+bronze_1_rank.png
+bronze_2_rank.png
+bronze_3_rank.png
 
-### Iron
-- `Iron_1_Rank.png`
-- `Iron_2_Rank.png`
-- `Iron_3_Rank.png`
+iron
+iron_1_rank.png
+iron_2_rank.png
+iron_3_rank.png
 
-## 📂 File Structure
+ file structure
 
-```
 frontend/
-├── public/
-│   └── ranks/
-│       ├── Radiant_Rank.png
-│       ├── Immortal_1_Rank.png
-│       ├── Immortal_2_Rank.png
-│       ├── ... (all 23 rank icons)
-│       └── Iron_1_Rank.png
-└── src/
-    └── components/
-        ├── PlayerCard.jsx (displays rank icon & RR bar)
-        └── PlayerCard.css (styles for icon & bar)
-```
+ public/
+    ranks/
+        radiant_rank.png
+        immortal_1_rank.png
+        immortal_2_rank.png
+        ... (all 23 rank icons)
+        iron_1_rank.png
+ src/
+     components/
+         playercard.jsx (displays rank icon & rr bar)
+         playercard.css (styles for icon & bar)
 
-## 🎯 How It Works
+ how it works
 
-### 1. Rank Icon Mapping
-The `getRankIcon()` function maps rank tier names to icon filenames:
+rank icon mapping
+the getrankicon() function maps rank tier names to icon filenames:
 
-```javascript
-getRankIcon("Diamond 3") 
-// Returns: "/ranks/Diamond_3_Rank.png"
+getrankicon("diamond 3")
+// returns: "/ranks/diamond_3_rank.png"
 
-getRankIcon("Radiant")
-// Returns: "/ranks/Radiant_Rank.png"
-```
+getrankicon("radiant")
+// returns: "/ranks/radiant_rank.png"
 
-### 2. RR Progress Bar
-The progress bar calculates width based on RR percentage:
+rr progress bar
+the progress bar calculates width based on rr percentage:
 
-```javascript
-// If player has 72 RR
+// if player has 72 rr
 <div style={{ width: '72%' }}>  // 72% filled
-  <span>72 / 100 RR</span>
+  <span>72 / 100 rr</span>
 </div>
-```
 
-## 🎨 Display Example
+ display example
 
-```
-┌───────────────────────┐
-│   [Rank Icon]         │  ← Animated 64x64 icon
-│   RANK                │
-│   Diamond 3           │  ← Rank name in red
-│   ┌─────────────────┐ │
-│   │████████░░░░░░░░░│ │  ← RR Progress bar (72%)
-│   │  72 / 100 RR    │ │  ← Centered text
-│   └─────────────────┘ │
-└───────────────────────┘
-```
 
-## 💚 RR Progress Bar Colors
+   [rank icon]            animated 64x64 icon
+   rank                
+   diamond 3              rank name in red
+    
+       rr progress bar (72%)
+     72 / 100 rr        centered text
+    
 
-- **Background**: Dark transparent (rgba(0, 0, 0, 0.4))
-- **Fill**: Green gradient (#00ff88 → #00cc66)
-- **Border**: Subtle white (rgba(255, 255, 255, 0.2))
-- **Glow**: Green shadow (rgba(0, 255, 136, 0.5))
-- **Text**: White with dark shadow for readability
 
-## ⚡ Animations
+ rr progress bar colors
 
-### Rank Icon Float
-```css
+background: dark transparent (rgba(0, 0, 0, 0.4))
+fill: green gradient (#00ff88  #00cc66)
+border: subtle white (rgba(255, 255, 255, 0.2))
+glow: green shadow (rgba(0, 255, 136, 0.5))
+text: white with dark shadow for readability
+
+ animations
+
+rank icon float
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { transform: translatey(0px); }
+  50% { transform: translatey(-5px); }
 }
-```
-- Duration: 3 seconds
-- Easing: ease-in-out
-- Infinite loop
+duration: 3 seconds
+easing: ease-in-out
+infinite loop
 
-### RR Bar Fill
-```css
+rr bar fill
 transition: width 0.5s ease;
-```
-- Smooth expansion when RR changes
-- 0.5 second duration
+smooth expansion when rr changes
+0.5 second duration
 
-## 🎮 Live Demo
+ live demo
 
-Check out the **ValorantTrackerDemo** artifact to see:
-- ✅ Rank icons for all players
-- ✅ Animated RR progress bars
-- ✅ Floating rank badges
-- ✅ Glowing effects
+check out the valoranttrackerdemo artifact to see:
+ rank icons for all players
+ animated rr progress bars
+ floating rank badges
+ glowing effects
 
-## 🔧 Customization
+ customization
 
-### Change Icon Size
-Edit `PlayerCard.css`:
-```css
+change icon size
+edit playercard.css:
 .rank-icon {
-  width: 80px;  /* Larger icon */
+  width: 80px;  /* larger icon */
   height: 80px;
 }
-```
 
-### Change RR Bar Height
-Edit `PlayerCard.css`:
-```css
+change rr bar height
+edit playercard.css:
 .rr-bar-wrapper {
-  height: 30px;  /* Taller bar */
+  height: 30px;  /* taller bar */
 }
-```
 
-### Change Bar Colors
-Edit `PlayerCard.css`:
-```css
+change bar colors
+edit playercard.css:
 .rr-bar-fill {
   background: linear-gradient(90deg, #ff4655 0%, #ff8787 100%);
-  /* Red gradient instead of green */
+  /* red gradient instead of green */
 }
-```
 
-## 📊 Data Requirements
+ data requirements
 
-From Tracker.gg API, you need:
-- `rank.tier` - e.g., "Diamond 3", "Radiant"
-- `rank.rr` - Number between 0-100
+from tracker.gg api, you need:
+rank.tier - e.g., "diamond 3", "radiant"
+rank.rr - number between 0-100
 
-Example API response:
-```json
+example api response:
 {
   "rank": {
-    "tier": "Diamond 3",
-    "tierNumber": 20,
+    "tier": "diamond 3",
+    "tiernumber": 20,
     "rr": 72,
-    "peakRank": "Ascendant 1"
+    "peakrank": "ascendant 1"
   }
 }
-```
 
-## 🐛 Troubleshooting
+ troubleshooting
 
-### Rank Icons Not Showing
-- Check `/frontend/public/ranks/` folder exists
-- Verify all 23 PNG files are present
-- Check browser console for 404 errors
-- Make sure rank tier name matches exactly
+rank icons not showing
+check /frontend/public/ranks/ folder exists
+verify all 23 png files are present
+check browser console for 404 errors
+make sure rank tier name matches exactly
 
-### RR Bar Not Displaying
-- Ensure `playerStats.rank.rr` is a number (0-100)
-- Check CSS is loaded properly
-- Verify element isn't being hidden
+rr bar not displaying
+ensure playerstats.rank.rr is a number (0-100)
+check css is loaded properly
+verify element isn't being hidden
 
-### Icons Look Blurry
-- Icons are 64x64px by default
-- Don't scale them too large (max 128px recommended)
-- Ensure source PNGs are high quality
+icons look blurry
+icons are 64x64px by default
+don't scale them too large (max 128px recommended)
+ensure source pngs are high quality
 
-## ✨ Future Enhancements
+ future enhancements
 
-Ideas for improving the rank display:
+ideas for improving the rank display:
 
-1. **Rank Up Animation** 
-   - Flash effect when player ranks up
-   - Confetti or particle effects
+rank up animation
+flash effect when player ranks up
+confetti or particle effects
 
-2. **Interactive Tooltip**
-   - Hover to see rank history
-   - Show RR change from last game
+interactive tooltip
+hover to see rank history
+show rr change from last game
 
-3. **Rank Comparison**
-   - Highlight rank differences
-   - Show average lobby rank
+rank comparison
+highlight rank differences
+show average lobby rank
 
-4. **Win/Loss Streaks**
-   - Visual indicator of hot/cold streaks
-   - Predict RR gain/loss
+win/loss streaks
+visual indicator of hot/cold streaks
+predict rr gain/loss
 
-5. **Rank Distribution Graph**
-   - Mini chart showing rank spread in lobby
-   - Team average vs enemy average
+rank distribution graph
+mini chart showing rank spread in lobby
+team average vs enemy average
 
-## 🎉 Summary
+ summary
 
-Your tracker now has:
-- ✅ Beautiful animated rank icons
-- ✅ RR progress bars (0-100)
-- ✅ Glowing effects and smooth animations
-- ✅ Support for all 23 competitive ranks
-- ✅ Professional, polished appearance
+your tracker now has:
+ beautiful animated rank icons
+ rr progress bars (0-100)
+ glowing effects and smooth animations
+ support for all 23 competitive ranks
+ professional, polished appearance
 
-The rank icons add personality and make it instantly clear what rank everyone is! 🏆
+the rank icons add personality and make it instantly clear what rank everyone is! 
+

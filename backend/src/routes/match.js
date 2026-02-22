@@ -6,7 +6,7 @@ const henrikService = require('../services/henrik');
 const cacheService = require('../services/cache');
 const lockfileService = require('../services/lockfile');
 
-const AGENT_NAME_BY_UUID = {
+const agentNameByUuid = {
   'add6443a-41bd-e414-f6ad-e58d267f4e95': 'Jett',
   'a3bfb853-43b2-7238-a4f1-ad90e9e46bcc': 'Reyna',
   '8e253930-4c05-31dd-1b6c-968525494517': 'Omen',
@@ -34,11 +34,11 @@ const AGENT_NAME_BY_UUID = {
 };
 
 let agentMapLastHydratedAt = 0;
-const AGENT_MAP_HYDRATE_TTL_MS = 6 * 60 * 60 * 1000;
+const agentMapHydrateTtlMs = 6 * 60 * 60 * 1000;
 
 const hydrateAgentNameMap = async () => {
   const now = Date.now();
-  if (now - agentMapLastHydratedAt < AGENT_MAP_HYDRATE_TTL_MS) return;
+  if (now - agentMapLastHydratedAt < agentMapHydrateTtlMs) return;
 
   try {
     const response = await axios.get(
@@ -50,7 +50,7 @@ const hydrateAgentNameMap = async () => {
       const uuid = String(agent?.uuid || '').toLowerCase();
       const name = agent?.displayName || null;
       if (uuid && name) {
-        AGENT_NAME_BY_UUID[uuid] = name;
+        agentNameByUuid[uuid] = name;
       }
     }
   } catch (error) {
@@ -62,7 +62,7 @@ const hydrateAgentNameMap = async () => {
 
 const getAgentName = (characterId) => {
   if (!characterId) return 'Not Selected';
-  return AGENT_NAME_BY_UUID[String(characterId).toLowerCase()] || 'Unknown Agent';
+  return agentNameByUuid[String(characterId).toLowerCase()] || 'Unknown Agent';
 };
 
 const toNumber = (value, fallback = 0) => {
@@ -249,7 +249,7 @@ router.get('/queue-status', async (req, res) => {
       }
     }
 
-    const cacheKey = `queue_status_${region}`;
+    const cacheKey = `queueStatus-${region}`;
     const cached = cacheService.get(cacheKey);
     if (cached) {
       return res.json({ ...cached, cached: true });
@@ -286,7 +286,7 @@ router.get('/queue-status', async (req, res) => {
  */
 router.get('/queue/modes', async (req, res) => {
   try {
-    const cacheKey = 'local_queue_modes';
+    const cacheKey = 'localQueueModes';
     const cached = cacheService.get(cacheKey);
     if (cached) {
       return res.json({ ...cached, cached: true });
@@ -405,7 +405,7 @@ router.post('/queue/join', async (req, res) => {
     const result = await valorantService.joinQueue(queueId || null);
 
     // Invalidate queue mode cache because selected queue may have changed
-    cacheService.delete('local_queue_modes');
+    cacheService.delete('localQueueModes');
 
     res.json({
       success: true,
@@ -429,7 +429,7 @@ router.get('/current', async (req, res) => {
   try {
     await hydrateAgentNameMap();
     // Check cache first (short TTL since match data changes)
-    const cacheKey = 'current_match';
+    const cacheKey = 'currentMatch';
     const cached = cacheService.get(cacheKey);
     
     if (cached) {
@@ -471,7 +471,7 @@ router.get('/current', async (req, res) => {
     let partyIdByPuuid = {};
     let queuePartyLimits = null;
     try {
-      const queueStatusCacheKey = `queue_status_${(user.region || 'na').toLowerCase()}`;
+      const queueStatusCacheKey = `queueStatus-${(user.region || 'na').toLowerCase()}`;
       let queueStatusPayload = cacheService.get(queueStatusCacheKey);
       if (!queueStatusPayload) {
         const fetchedQueueStatus = await henrikService.getQueueStatus(user.region || 'na');
@@ -645,7 +645,7 @@ router.get('/scoreboard/current', async (req, res) => {
       const seasonKdCacheTtlMs = 30 * 60 * 1000;
       const playersToHydrate = [];
       for (const puuid of puuids) {
-        const cacheKey = `henrik_season_kd_${region}_${puuid}_${Array.from(seasonTokens).join('|') || 'current'}`;
+        const cacheKey = `henrikSeasonKd-${region}-${puuid}-${Array.from(seasonTokens).join('|') || 'current'}`;
         const cachedKd = cacheService.get(cacheKey);
         if (cachedKd !== null && cachedKd !== undefined) {
           seasonKdByPuuid[puuid] = cachedKd;

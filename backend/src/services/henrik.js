@@ -7,7 +7,7 @@ const axios = require('axios');
 class HenrikService {
   constructor() {
     this.baseUrl = 'https://api.henrikdev.xyz';
-    this.apiKey = process.env.HENRIK_API_KEY || '';
+    this.apiKey = process.env.HENRIKAPIKEY || process.env.henrikapikey || '';
     this.rateLimitedUntil = 0;
     this.accountCache = new Map();
     this.requestQueue = Promise.resolve();
@@ -34,7 +34,7 @@ class HenrikService {
     const run = async () => {
       if (Date.now() < this.rateLimitedUntil) {
         const error = new Error('Henrik backoff active');
-        error.code = 'HENRIK_BACKOFF';
+        error.code = 'HENRIKBACKOFF';
         throw error;
       }
 
@@ -137,14 +137,18 @@ class HenrikService {
       );
 
       const data = response.data.data;
+      const currentData = data.current_data || {};
+      const highestRank = data.highest_rank || null;
       
       return {
-        currenttier: data.current_data?.currenttier || 0,
-        currenttierPatched: data.current_data?.currenttierpatched || 'Unranked',
-        ranking_in_tier: data.current_data?.ranking_in_tier || 0,
-        elo: data.current_data?.elo || 0,
-        old: data.current_data?.old || false,
-        highest_rank: data.highest_rank || null
+        currenttier: currentData.currenttier || 0,
+        currenttierPatched: currentData.currenttierpatched || 'Unranked',
+        rankingInTier: currentData.ranking_in_tier || 0,
+        elo: currentData.elo || 0,
+        old: currentData.old || false,
+        highestRank: highestRank || null,
+        highestRankPatchedTier: highestRank?.patched_tier || highestRank?.patchedTier || null,
+        highestRankTierName: highestRank?.tier?.name || null
       };
     } catch (error) {
       if (error.response?.status === 429) {

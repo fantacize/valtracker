@@ -4,17 +4,17 @@ const path = require('path');
 const axios = require('axios');
 const lockfileService = require('./lockfile');
 
-const DEFAULT_SKINS_CSV_PATH = path.resolve(__dirname, '..', '..', '..', 'valorant_skins_by_weapon.csv');
-const SKINS_CSV_PATH = process.env.SKINS_CSV_PATH || DEFAULT_SKINS_CSV_PATH;
+const defaultSkinsCsvPath = path.resolve(__dirname, '..', '..', '..', 'valorant_skins_by_weapon.csv');
+const skinsCsvPath = process.env.SKINSCSVPATH || process.env.skinscsvpath || process.env.skinsCsvPath || defaultSkinsCsvPath;
 let skinsCsvCache = null;
-const RANK_NAMES_BY_TIER = [
+const rankNamesByTier = [
   'Unranked', 'Unranked', 'Unranked', 'Iron 1', 'Iron 2', 'Iron 3',
   'Bronze 1', 'Bronze 2', 'Bronze 3', 'Silver 1', 'Silver 2', 'Silver 3',
   'Gold 1', 'Gold 2', 'Gold 3', 'Platinum 1', 'Platinum 2', 'Platinum 3',
   'Diamond 1', 'Diamond 2', 'Diamond 3', 'Ascendant 1', 'Ascendant 2', 'Ascendant 3',
   'Immortal 1', 'Immortal 2', 'Immortal 3', 'Radiant'
 ];
-const BEFORE_ASCENDANT_SEASONS = new Set([
+const beforeAscendantSeasons = new Set([
   '0df5adb9-4dcb-6899-1306-3e9860661dd3',
   '3f61c772-4560-cd3f-5d3f-a7ab5abda6b3',
   '0530b9c4-4980-f2ee-df5d-09864cd00542',
@@ -37,12 +37,12 @@ const BEFORE_ASCENDANT_SEASONS = new Set([
 const loadSkinsCsvFallback = () => {
   if (skinsCsvCache !== null) return skinsCsvCache;
   try {
-    if (!fs.existsSync(SKINS_CSV_PATH)) {
+    if (!fs.existsSync(skinsCsvPath)) {
       skinsCsvCache = null;
       return null;
     }
 
-    const raw = fs.readFileSync(SKINS_CSV_PATH, 'utf8');
+    const raw = fs.readFileSync(skinsCsvPath, 'utf8');
     const lines = raw.split(/\r?\n/).filter(Boolean);
     if (lines.length <= 1) {
       skinsCsvCache = null;
@@ -522,7 +522,7 @@ class ValorantService {
       for (const tier of winsByTier) {
         let value = Number(tier || 0);
         // Match yoink rank.py behavior for pre-Ascendant seasons.
-        if (BEFORE_ASCENDANT_SEASONS.has(seasonId) && value > 20) {
+        if (beforeAscendantSeasons.has(seasonId) && value > 20) {
           value += 3;
         }
         if (value > peakTier) {
@@ -538,7 +538,7 @@ class ValorantService {
   rankNameFromTier(tier) {
     const raw = Number(tier || 0);
     const idx = Number.isFinite(raw) ? Math.max(0, Math.min(27, raw)) : 0;
-    return RANK_NAMES_BY_TIER[idx] || 'Unranked';
+    return rankNamesByTier[idx] || 'Unranked';
   }
 
   calculateHsAndKdFromMatch(matchData, puuid) {
@@ -605,7 +605,7 @@ class ValorantService {
       try {
         content = await this.getContentServiceData();
         activeSeasonId = this.getActiveActSeasonId(content);
-      } catch (_e) {}
+      } catch {}
 
       // Direct port of yoink/src/rank.py
       try {
@@ -636,7 +636,7 @@ class ValorantService {
           if (!winsByTier) continue;
           for (const raw of winsByTier) {
             let tier = Number(raw || 0);
-            if (BEFORE_ASCENDANT_SEASONS.has(seasonId) && tier > 20) {
+            if (beforeAscendantSeasons.has(seasonId) && tier > 20) {
               tier += 3;
             }
             if (tier > maxRank) {
@@ -655,10 +655,10 @@ class ValorantService {
           const games = Number(seasonData?.NumberOfGames || 0);
           out.games = games;
           out.winRate = games === 0 ? 100 : Math.trunc((wins / games) * 100);
-        } catch (_e2) {
+        } catch {
           out.winRate = 'N/A';
         }
-      } catch (_rankError) {
+      } catch {
         // keep defaults
       }
 
@@ -688,13 +688,13 @@ class ValorantService {
               const perf = this.calculateHsAndKdFromMatch(matchDetails, puuid);
               out.kd = perf.kd;
               out.hsPct = perf.hsPct;
-            } catch (_detailsError) {
+            } catch {
               out.kd = 'N/A';
               out.hsPct = 'N/A';
             }
           }
         }
-      } catch (_statsError) {
+      } catch {
         // keep defaults
       }
 

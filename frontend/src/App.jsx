@@ -4,8 +4,8 @@ import PregameLobby from './components/PregameLobby';
 import LiveTracker from './components/LiveTracker';
 import './App.css';
 
-const API_URL = 'http://localhost:3000';
-const WEAPON_FILTER_OPTIONS = [
+const apiUrl = 'http://localhost:3000';
+const weaponFilterOptions = [
   'Classic',
   'Shorty',
   'Frenzy',
@@ -51,7 +51,7 @@ function App() {
   // Check VALORANT status
   const checkStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/match/status`);
+      const response = await fetch(`${apiUrl}/api/match/status`);
       const data = await response.json();
       setStatus(data);
     } catch (err) {
@@ -70,7 +70,7 @@ function App() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${API_URL}/api/match/current`);
+      const response = await fetch(`${apiUrl}/api/match/current`);
       const data = await response.json();
       
       if (data.inGame) {
@@ -95,7 +95,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/match/queue/modes`);
+      const response = await fetch(`${apiUrl}/api/match/queue/modes`);
       if (!response.ok) {
         throw new Error(`Queue mode request failed (${response.status})`);
       }
@@ -128,7 +128,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/match/pregame/current`);
+      const response = await fetch(`${apiUrl}/api/match/pregame/current`);
       const data = await response.json();
       if (data.inPregame) {
         setPregameData(data);
@@ -145,7 +145,7 @@ function App() {
 
   const fetchAuthStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/status`);
+      const response = await fetch(`${apiUrl}/api/auth/status`);
       const data = await response.json();
       setAuthStatus(data);
     } catch (err) {
@@ -158,7 +158,7 @@ function App() {
     setAuthLoading(true);
     setAuthMessage('');
     try {
-      const response = await fetch(`${API_URL}/api/auth/login/local`, { method: 'POST' });
+      const response = await fetch(`${apiUrl}/api/auth/login/local`, { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || data.error || `Login failed (${response.status})`);
@@ -203,7 +203,7 @@ function App() {
     setQueueActionLoading(true);
     setQueueActionMessage('');
     try {
-      const response = await fetch(`${API_URL}/api/match/queue/join`, {
+      const response = await fetch(`${apiUrl}/api/match/queue/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queueId: selectedQueueId })
@@ -444,7 +444,7 @@ function App() {
             {authLoading ? 'Connecting...' : 'Login (Local)'}
           </button>
           <div className="weapon-filters">
-            {WEAPON_FILTER_OPTIONS.map((weapon) => (
+            {weaponFilterOptions.map((weapon) => (
               <button
                 key={weapon}
                 type="button"

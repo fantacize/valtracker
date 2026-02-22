@@ -100,7 +100,7 @@ router.get('/yoink/:puuid', async (req, res) => {
       return res.status(400).json({ error: 'puuid is required' });
     }
 
-    const cacheKey = `player_yoink_${puuid}`;
+    const cacheKey = `playerYoink-${puuid}`;
     const cached = cacheService.get(cacheKey);
     if (cached) {
       return res.json({ ...cached, cached: true });
@@ -136,7 +136,7 @@ router.get('/yoink/:puuid', async (req, res) => {
         rrHistory: Array.isArray(yoink?.rrHistory) ? yoink.rrHistory : [],
         peakActEpisode: yoink?.peakActEpisode || null
       },
-      trackerUnavailableReason: 'using_yoink_only',
+      trackerUnavailableReason: 'usingYoinkOnly',
       timestamp: Date.now()
     };
 
@@ -156,7 +156,7 @@ router.get('/henrik/:puuid', async (req, res) => {
     const { puuid } = req.params;
     const region = String(req.query.region || 'na').toLowerCase();
     const size = Number(req.query.size || 10);
-    const cacheKey = `player_henrik_${puuid}_${region}_${size}`;
+    const cacheKey = `playerHenrik-${puuid}-${region}-${size}`;
     const cached = cacheService.get(cacheKey);
     if (cached) {
       return res.json({ ...cached, cached: true });
@@ -170,9 +170,9 @@ router.get('/henrik/:puuid', async (req, res) => {
     ]);
 
     const overview = computeHenrikOverviewFromMatches(matches, puuid);
-    const peakFromMmr = mmr?.highest_rank?.patched_tier || mmr?.highest_rank?.tier?.name || null;
+    const peakFromMmr = mmr?.highestRankPatchedTier || mmr?.highestRankTierName || null;
     const currentTierPatched = mmr?.currenttierPatched || 'Unranked';
-    const rankingInTier = toNumber(mmr?.ranking_in_tier, 0);
+    const rankingInTier = toNumber(mmr?.rankingInTier, 0);
     const rrHistory = Array.isArray(mmrHistory)
       ? mmrHistory.slice(0, 5).map((entry) => ({
           matchId: entry?.match_id || null,
@@ -201,7 +201,7 @@ router.get('/henrik/:puuid', async (req, res) => {
         rrHistory,
         peakActEpisode: null
       },
-      trackerUnavailableReason: 'using_henrik_only',
+      trackerUnavailableReason: 'usingHenrikOnly',
       timestamp: Date.now()
     };
 
@@ -219,7 +219,7 @@ router.get('/henrik/:puuid', async (req, res) => {
 router.get('/combined/:puuid', async (req, res) => {
   try {
     const { puuid } = req.params;
-    const cacheKey = `player_combined_${puuid}`;
+    const cacheKey = `playerCombined-${puuid}`;
     const cached = cacheService.get(cacheKey);
     if (cached) {
       return res.json({ ...cached, cached: true });
@@ -259,7 +259,7 @@ router.get('/combined/:puuid', async (req, res) => {
         rrHistory,
         peakActEpisode: yoink?.peakActEpisode || null
       },
-      trackerUnavailableReason: 'using_yoink_only',
+      trackerUnavailableReason: 'usingYoinkOnly',
       timestamp: Date.now()
     };
 
@@ -324,7 +324,7 @@ router.get('/combined/:puuid', async (req, res) => {
 router.get('/:name/:tag', async (req, res) => {
   try {
     const { name, tag } = req.params;
-    const cacheKey = `player_${name}_${tag}`;
+    const cacheKey = `player-${name}-${tag}`;
 
     // Check cache (player stats can be cached longer)
     const cached = cacheService.get(cacheKey);
@@ -384,7 +384,7 @@ router.get('/puuid/:puuid', async (req, res) => {
   try {
     const { puuid } = req.params;
     const { region = 'na' } = req.query;
-    const cacheKey = `player_puuid_${puuid}`;
+    const cacheKey = `playerPuuid-${puuid}`;
 
     // Check cache
     const cached = cacheService.get(cacheKey);
@@ -441,7 +441,7 @@ router.get('/match-history/:name/:tag', async (req, res) => {
   try {
     const { name, tag } = req.params;
     const { mode = 'competitive', size = 5, region = 'na' } = req.query;
-    const cacheKey = `match_history_${name}_${tag}_${mode}_${size}`;
+    const cacheKey = `matchHistory-${name}-${tag}-${mode}-${size}`;
 
     // Check cache
     const cached = cacheService.get(cacheKey);
@@ -498,7 +498,7 @@ router.get('/match-history-puuid/:puuid', async (req, res) => {
   try {
     const { puuid } = req.params;
     const { mode = 'competitive', size = 5, region = 'na' } = req.query;
-    const cacheKey = `match_history_puuid_${puuid}_${mode}_${size}`;
+    const cacheKey = `matchHistoryPuuid-${puuid}-${mode}-${size}`;
 
     // Check cache
     const cached = cacheService.get(cacheKey);

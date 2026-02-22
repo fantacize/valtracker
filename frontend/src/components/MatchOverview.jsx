@@ -2,7 +2,7 @@ import PlayerCard from './PlayerCard';
 import './MatchOverview.css';
 
 function MatchOverview({ matchData, selectedWeapons = [] }) {
-  const PARTY_COLORS = [
+  const partyColors = [
     '#ff6b6b',
     '#4dabf7',
     '#51cf66',
@@ -13,7 +13,7 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
     '#f06595'
   ];
 
-  const MAP_CODENAME_TO_NAME = {
+  const mapCodenameToName = {
     Infinity: 'Abyss',
     Ascent: 'Ascent',
     Duality: 'Bind',
@@ -25,10 +25,10 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
     Pitt: 'Pearl',
     Bonsai: 'Split',
     Juliett: 'Sunset',
-    HURM_Alley: 'District',
-    HURM_Helix: 'Drift',
-    HURM_Bowl: 'Kasbah',
-    HURM_Yard: 'Piazza',
+    HURMAlley: 'District',
+    HURMHelix: 'Drift',
+    HURMBowl: 'Kasbah',
+    HURMYard: 'Piazza',
     Poveglia: 'Range',
     Rook: 'Corrode'
   };
@@ -83,7 +83,7 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
       partyMetaById.set(partyId, {
         partyNumber,
         label: toRoman(partyNumber),
-        color: PARTY_COLORS[idx % PARTY_COLORS.length]
+        color: partyColors[idx % partyColors.length]
       });
       idx += 1;
     }
@@ -114,8 +114,10 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
     const raw = String(mapId || '');
     if (!raw) return 'Unknown Map';
     const lowerRaw = raw.toLowerCase();
-    for (const [code, name] of Object.entries(MAP_CODENAME_TO_NAME)) {
-      if (lowerRaw.includes(code.toLowerCase())) {
+    const normalizedRaw = lowerRaw.replace(/_/g, '');
+    for (const [code, name] of Object.entries(mapCodenameToName)) {
+      const normalizedCode = String(code).toLowerCase().replace(/_/g, '');
+      if (normalizedRaw.includes(normalizedCode)) {
         return name;
       }
     }
@@ -128,7 +130,7 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
     if (modeId.includes('Deathmatch')) return 'Deathmatch';
     if (modeId.includes('QuickBomb')) return 'Unrated';
     if (modeId.includes('SpikeRush')) return 'Spike Rush';
-    if (modeId.includes('_NewMap')) return 'Unrated';
+    if (String(modeId || '').toLowerCase().includes('newmap')) return 'Unrated';
     return 'Custom';
   };
 

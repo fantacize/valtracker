@@ -202,17 +202,17 @@ function PlayerCard({ player, selectedWeapons = [] }) {
   const trackerReasonLabel = (() => {
     if (
       !trackerReason ||
-      trackerReason === 'using_yoink_only' ||
-      trackerReason === 'using_henrik_only' ||
-      trackerReason === 'using_henrik_and_yoink'
+      trackerReason === 'usingYoinkOnly' ||
+      trackerReason === 'usingHenrikOnly' ||
+      trackerReason === 'usingHenrikAndYoink'
     ) return null;
     const map = {
-      using_yoink_only: 'Using yoink source only (Riot local APIs).',
-      tracker_key_missing: 'Tracker stats unavailable: TRACKER_API_KEY missing in backend.',
-      tracker_auth_failed: 'Tracker stats unavailable: invalid Tracker API key.',
-      tracker_rate_limited: 'Tracker stats unavailable: Tracker rate limited.',
-      tracker_profile_not_found: 'Tracker stats unavailable: profile not found.',
-      tracker_unavailable: 'Tracker stats unavailable: Tracker service error.'
+      usingYoinkOnly: 'Using yoink source only (Riot local APIs).',
+      trackerKeyMissing: 'Tracker stats unavailable: TRACKERAPIKEY missing in backend.',
+      trackerAuthFailed: 'Tracker stats unavailable: invalid Tracker API key.',
+      trackerRateLimited: 'Tracker stats unavailable: Tracker rate limited.',
+      trackerProfileNotFound: 'Tracker stats unavailable: profile not found.',
+      trackerUnavailable: 'Tracker stats unavailable: Tracker service error.'
     };
     return map[trackerReason] || 'Tracker stats unavailable.';
   })();

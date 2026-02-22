@@ -1,146 +1,131 @@
-# VALORANT Skin Tracker
+valorant skin tracker
 
-A real-time VALORANT tracker that shows what skins everyone in your match is using, plus stats from Tracker.gg and Henrik API.
+a real-time valorant tracker that shows what skins everyone in your match is using, plus stats from tracker.gg and henrik api.
 
-# VALORANT Skin Tracker
+valorant skin tracker
 
-A real-time VALORANT tracker that shows what skins everyone in your match is using, plus comprehensive stats from Tracker.gg and Henrik API.
+a real-time valorant tracker that shows what skins everyone in your match is using, plus comprehensive stats from tracker.gg and henrik api.
 
-## Features
-- ✅ **Real-time skin tracking** - See everyone's weapon skins live in your current match
-- ✅ **Comprehensive player stats** - Rank, RR, Level, K/D, HS%, Win Rate, Peak Rank
-- ✅ **vtl.lol integration** - Direct links to player profiles
-- ✅ **Match history** - View last 5 games with K/D/A and results
-- ✅ **Hidden profile support** - Works with private profiles (shows match history)
-- ✅ **Player stats from Tracker.gg** - Detailed statistics for all players
-- ✅ **Hidden profile resolution via Henrik API** - Find player names even when hidden
-- ✅ **Live match monitoring** - Real-time updates via websocket
-- ✅ **Agent, rank, level, and loadout data** - Complete player information
-- ✅ **Auto-refresh** - Updates every 3 seconds
-- ✅ **Beautiful UI** - Team colors, smooth animations, professional design
+features
+ real-time skin tracking - see everyone's weapon skins live in your current match
+ comprehensive player stats - rank, rr, level, k/d, hs%, win rate, peak rank
+ vtl.lol integration - direct links to player profiles
+ match history - view last 5 games with k/d/a and results
+ hidden profile support - works with private profiles (shows match history)
+ player stats from tracker.gg - detailed statistics for all players
+ hidden profile resolution via henrik api - find player names even when hidden
+ live match monitoring - real-time updates via websocket
+ agent, rank, level, and loadout data - complete player information
+ auto-refresh - updates every 3 seconds
+ beautiful ui - team colors, smooth animations, professional design
 
-## Tech Stack
-- **Backend**: Node.js + Express
-- **Frontend**: React + Vite
-- **APIs**: 
-  - Local VALORANT client API (via lockfile)
-  - Henrik API (for hidden profiles)
-  - Tracker.gg API (for stats)
-  - Valorant-API.com (for skin/weapon data)
+tech stack
+backend: node.js + express
+frontend: react + vite
+apis:
+local valorant client api (via lockfile)
+henrik api (for hidden profiles)
+tracker.gg api (for stats)
+valorant-api.com (for skin/weapon data)
 
-## Project Structure
-```
+project structure
 valorant-tracker/
-├── backend/
-│   ├── src/
-│   │   ├── services/
-│   │   │   ├── lockfile.js      # Read VALORANT lockfile
-│   │   │   ├── valorant.js      # Local VALORANT client API
-│   │   │   ├── henrik.js        # Henrik API integration
-│   │   │   ├── tracker.js       # Tracker.gg API
-│   │   │   └── cache.js         # Simple caching layer
-│   │   ├── routes/
-│   │   │   ├── match.js         # Match endpoints
-│   │   │   └── player.js        # Player lookup endpoints
-│   │   └── server.js            # Express server
-│   ├── package.json
-│   └── .env                     # API keys
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── MatchOverview.jsx
-│   │   │   ├── PlayerCard.jsx
-│   │   │   └── SkinDisplay.jsx
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-└── README.md
-```
+ backend/
+    src/
+       services/
+          lockfile.js      # read valorant lockfile
+          valorant.js      # local valorant client api
+          henrik.js        # henrik api integration
+          tracker.js       # tracker.gg api
+          cache.js         # simple caching layer
+       routes/
+          match.js         # match endpoints
+          player.js        # player lookup endpoints
+       server.js            # express server
+    package.json
+    .env                     # api keys
+ frontend/
+    src/
+       components/
+          matchoverview.jsx
+          playercard.jsx
+          skindisplay.jsx
+       app.jsx
+       main.jsx
+    package.json
+    vite.config.js
+ readme.md
 
-## Setup Instructions
+setup instructions
 
-### 1. Backend Setup
-```bash
+backend setup
 cd backend
 npm install
-```
 
-Create `.env` file:
-```env
-PORT=3000
-HENRIK_API_KEY=your_key_here
-TRACKER_API_KEY=your_key_here
-```
+create .env file:
+port=3000
+henrikapikey=your_key_here
+trackerapikey=your_key_here
 
-### 2. Frontend Setup
-```bash
+frontend setup
 cd frontend
 npm install
-```
 
-### 3. Run the App
-Terminal 1 (Backend):
-```bash
+run the app
+terminal 1 (backend):
 cd backend
 npm run dev
-```
 
-Terminal 2 (Frontend):
-```bash
+terminal 2 (frontend):
 cd frontend
 npm run dev
-```
 
-Open `http://localhost:5173`
+open http://localhost:5173
 
-## How It Works
+how it works
 
-1. **Lockfile Reading**: Backend reads `C:\Riot Games\VALORANT\live\lockfile` to get:
-   - Port number
-   - Password for local API auth
-   - Process ID
+lockfile reading: backend reads c:\riot games\valorant\live\lockfile to get:
+port number
+password for local api auth
+process id
 
-2. **Local API Connection**: Uses credentials to connect to `https://127.0.0.1:{port}` with Basic Auth
+local api connection: uses credentials to connect to https://127.0.0.1:{port} with basic auth
 
-3. **Match Monitoring**: Connects to websocket to detect when you're in a match
+match monitoring: connects to websocket to detect when you're in a match
 
-4. **Data Fetching**: 
-   - Gets match ID from `/chat/v4/presences`
-   - Fetches player list from `/core-game/v1/matches/{matchId}`
-   - Fetches loadouts from `/core-game/v1/matches/{matchId}/loadouts`
-   - Enriches with Henrik API (for hidden names) and Tracker.gg (for stats)
+data fetching:
+gets match id from /chat/v4/presences
+fetches player list from /core-game/v1/matches/{matchid}
+fetches loadouts from /core-game/v1/matches/{matchid}/loadouts
+enriches with henrik api (for hidden names) and tracker.gg (for stats)
 
-5. **Frontend Display**: React app polls backend and displays real-time data
+frontend display: react app polls backend and displays real-time data
 
-## API Endpoints
+api endpoints
 
-### Backend Endpoints
-- `GET /api/match/current` - Get current match data with skins
-- `GET /api/player/:name/:tag` - Get player stats (uses Henrik + Tracker.gg)
-- `GET /api/match/status` - Check if VALORANT is running
+backend endpoints
+get /api/match/current - get current match data with skins
+get /api/player/:name/:tag - get player stats (uses henrik + tracker.gg)
+get /api/match/status - check if valorant is running
 
-## Notes
-- VALORANT must be running and you must be in a match
-- Lockfile location is hardcoded but can be changed in `lockfile.js`
-- Rate limits are handled with exponential backoff
-- Cached responses reduce API calls
+notes
+valorant must be running and you must be in a match
+lockfile location is hardcoded but can be changed in lockfile.js
+rate limits are handled with exponential backoff
+cached responses reduce api calls
 
-## Electron Desktop Wrapper (Windows)
+electron desktop wrapper (windows)
 
-Use this if you want a standalone desktop app window (not a browser tab).
+use this if you want a standalone desktop app window (not a browser tab).
 
-### Build desktop installer/exe
-```bash
+build desktop installer/exe
 build-electron.bat
-```
 
-This runs:
-1. `npm run electron:build:backend` (builds `release/ValorantTrackerBackend.exe` + `release/frontend-dist`)
-2. `electron-builder` (outputs installer/app in `electron-dist/`)
+this runs:
+npm run electron:build:backend (builds release/valoranttrackerbackend.exe + release/frontend-dist)
+electron-builder (outputs installer/app in electron-dist/)
 
-### Run Electron locally
-```bash
+run electron locally
 npm install
 start-electron.bat
-```
+

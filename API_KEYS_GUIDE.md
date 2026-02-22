@@ -1,212 +1,203 @@
-# 🔑 Getting API Keys
+ getting api keys
 
-This guide will help you get free API keys for Henrik API and Tracker.gg.
+this guide will help you get free api keys for henrik api and tracker.gg.
 
-## Why You Need API Keys
+why you need api keys
 
-While the app works without API keys, you'll hit rate limits very quickly. With free API keys:
-- **Henrik API**: 30 requests/minute → 300 requests/minute
-- **Tracker.gg**: 10 requests/minute → 100 requests/minute
+while the app works without api keys, you'll hit rate limits very quickly. with free api keys:
+henrik api: 30 requests/minute  300 requests/minute
+tracker.gg: 10 requests/minute  100 requests/minute
 
-**Recommendation:** Get both keys! Takes 5 minutes total.
+recommendation: get both keys! takes 5 minutes total.
 
----
 
-## 1. Henrik API Key (Free) 🌐
 
-Henrik API is used for:
-- Finding hidden player names
-- Getting player PUUIDs
-- Match history data
-- MMR/Rank information
+henrik api key (free) 
 
-### Steps to Get Henrik API Key:
+henrik api is used for:
+finding hidden player names
+getting player puuids
+match history data
+mmr/rank information
 
-1. **Join Henrik Dev Discord**
-   - Go to: https://discord.gg/X3GaVkX2YN
-   - Click "Join Server"
+steps to get henrik api key:
 
-2. **Request API Key**
-   - Once in the Discord, go to the `#get-key` channel
-   - Follow the bot instructions (usually just click a button)
-   - You'll receive your API key via DM from the bot
-   - It looks like: `HDEV-a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+join henrik dev discord
+go to: https://discord.gg/x3gavkx2yn
+click "join server"
 
-3. **Add to .env File**
-   ```env
-   HENRIK_API_KEY=HDEV-a1b2c3d4-e5f6-7890-abcd-ef1234567890
-   ```
+request api key
+once in the discord, go to the #get-key channel
+follow the bot instructions (usually just click a button)
+you'll receive your api key via dm from the bot
+it looks like: hdev-a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
-**Rate Limits (Free Tier):**
-- 300 requests per minute
-- 20,000 requests per day
-- More than enough for personal use!
+add to .env file
+   henrikapikey=hdev-a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
----
+rate limits (free tier):
+300 requests per minute
+20,000 requests per day
+more than enough for personal use!
 
-## 2. Tracker.gg API Key (Free) 📊
 
-Tracker.gg API is used for:
-- Detailed player statistics
-- K/D ratios
-- Headshot percentages
-- Win rates
-- Agent-specific stats
-- Rank/RR information
 
-### Steps to Get Tracker.gg API Key:
+tracker.gg api key (free) 
 
-1. **Go to Tracker Network Developers**
-   - Visit: https://tracker.gg/developers
-   - Click "Sign In" or "Sign Up"
+tracker.gg api is used for:
+detailed player statistics
+k/d ratios
+headshot percentages
+win rates
+agent-specific stats
+rank/rr information
 
-2. **Create Account**
-   - Sign up with email or social login
-   - Verify your email if required
+steps to get tracker.gg api key:
 
-3. **Request API Access**
-   - Go to: https://tracker.gg/developers/docs/titles/valorant
-   - Click "Applications" in the top menu
-   - Click "Create New Application"
-   - Fill in the form:
-     - **Application Name:** "Personal Valorant Tracker"
-     - **Description:** "Personal use tracker for VALORANT matches"
-     - **Application URL:** http://localhost:3000 (or leave blank)
-   - Submit the application
+go to tracker network developers
+visit: https://tracker.gg/developers
+click "sign in" or "sign up"
 
-4. **Get Your API Key**
-   - Once approved (usually instant), go to "Applications"
-   - Click on your application
-   - Copy your API key
-   - It looks like: `a1b2c3d4-e5f6-7890-1234-567890abcdef`
+create account
+sign up with email or social login
+verify your email if required
 
-5. **Add to .env File**
-   ```env
-   TRACKER_API_KEY=a1b2c3d4-e5f6-7890-1234-567890abcdef
-   ```
+request api access
+go to: https://tracker.gg/developers/docs/titles/valorant
+click "applications" in the top menu
+click "create new application"
+fill in the form:
+application name: "personal valorant tracker"
+description: "personal use tracker for valorant matches"
+application url: http://localhost:3000 (or leave blank)
+submit the application
 
-**Rate Limits (Free Tier):**
-- 100 requests per minute
-- 10,000 requests per day
-- Perfect for personal trackers!
+get your api key
+once approved (usually instant), go to "applications"
+click on your application
+copy your api key
+it looks like: a1b2c3d4-e5f6-7890-1234-567890abcdef
 
----
+add to .env file
+   trackerapikey=a1b2c3d4-e5f6-7890-1234-567890abcdef
 
-## 3. Setup Your .env File
+rate limits (free tier):
+100 requests per minute
+10,000 requests per day
+perfect for personal trackers!
 
-Create `backend/.env` file:
 
-```env
-PORT=3000
 
-# Henrik API Key (get from Discord: https://discord.gg/X3GaVkX2YN)
-HENRIK_API_KEY=HDEV-your-key-here
+setup your .env file
 
-# Tracker.gg API Key (get from: https://tracker.gg/developers)
-TRACKER_API_KEY=your-key-here
-```
+create backend/.env file:
 
-**Important Notes:**
-- Never commit `.env` to Git (it's in .gitignore)
-- Keep your keys private
-- Don't share your keys publicly
-- Regenerate if accidentally exposed
+port=3000
 
----
+henrik api key (get from discord: https://discord.gg/x3gavkx2yn)
+henrikapikey=hdev-your-key-here
 
-## 4. Test Your API Keys
+tracker.gg api key (get from: https://tracker.gg/developers)
+trackerapikey=your-key-here
 
-Start your backend:
-```bash
+important notes:
+never commit .env to git (it's in .gitignore)
+keep your keys private
+don't share your keys publicly
+regenerate if accidentally exposed
+
+
+
+test your api keys
+
+start your backend:
 cd backend
 npm run dev
-```
 
-You should see:
-```
-✓ Server started successfully
-✓ CORS enabled
-✓ Waiting for requests...
-```
+you should see:
+ server started successfully
+ cors enabled
+ waiting for requests...
 
-No errors = your keys are working! 🎉
+no errors = your keys are working! 
 
----
 
-## Troubleshooting
 
-### "Invalid API Key" Error
-- Double-check you copied the full key
-- Make sure there are no spaces before/after the key
-- Verify the key in your Discord DMs / Tracker dashboard
-- Try regenerating the key
+troubleshooting
 
-### "Rate Limit Exceeded"
-- You're making too many requests
-- Wait 1 minute and try again
-- The app caches data to minimize requests
-- Consider increasing cache times in code
+"invalid api key" error
+double-check you copied the full key
+make sure there are no spaces before/after the key
+verify the key in your discord dms / tracker dashboard
+try regenerating the key
 
-### "API Key Not Found"
-- Make sure your `.env` file is in the `backend/` folder
-- Restart your backend server after adding keys
-- Check file is named exactly `.env` (not `.env.txt`)
+"rate limit exceeded"
+you're making too many requests
+wait 1 minute and try again
+the app caches data to minimize requests
+consider increasing cache times in code
 
-### Henrik API Not Working
-- Make sure you're in the Henrik Discord server
-- Check your DMs for the key from the bot
-- Try requesting a new key in `#get-key`
-- Contact support in `#support` channel
+"api key not found"
+make sure your .env file is in the backend/ folder
+restart your backend server after adding keys
+check file is named exactly .env (not .env.txt)
 
-### Tracker.gg Not Working
-- Verify your application was approved
-- Check you're using the correct API key (not client ID)
-- Make sure you're hitting the right endpoints
-- Check Tracker.gg status page
+henrik api not working
+make sure you're in the henrik discord server
+check your dms for the key from the bot
+try requesting a new key in #get-key
+contact support in #support channel
 
----
+tracker.gg not working
+verify your application was approved
+check you're using the correct api key (not client id)
+make sure you're hitting the right endpoints
+check tracker.gg status page
 
-## Rate Limit Best Practices
 
-The app already implements:
-- ✅ Response caching (10 seconds for match data, 10 minutes for stats)
-- ✅ Request deduplication
-- ✅ Exponential backoff on errors
 
-You can further optimize by:
-- Reducing auto-refresh frequency
-- Increasing cache TTL values
-- Disabling certain features
+rate limit best practices
 
----
+the app already implements:
+ response caching (10 seconds for match data, 10 minutes for stats)
+ request deduplication
+ exponential backoff on errors
 
-## Alternative: Run Without API Keys
+you can further optimize by:
+reducing auto-refresh frequency
+increasing cache ttl values
+disabling certain features
 
-The app works without keys but with severe limitations:
-- Henrik: ~30 req/min → You'll hit limits with 2-3 players
-- Tracker: ~10 req/min → Can't load stats for full lobby
 
-**Not recommended for actual use!**
 
----
+alternative: run without api keys
 
-## Need Help?
+the app works without keys but with severe limitations:
+henrik: ~30 req/min  you'll hit limits with 2-3 players
+tracker: ~10 req/min  can't load stats for full lobby
 
-- Henrik API: Discord support in `#support`
-- Tracker.gg: Email developers@tracker.gg
-- This project: Create a GitHub issue
+not recommended for actual use!
 
----
 
-## Summary
 
-✅ **Do this:**
-1. Join Henrik Discord → Get key (2 min)
-2. Register on Tracker.gg → Get key (3 min)
-3. Add both to `backend/.env`
-4. Start backend → Test it works
-5. Enjoy unlimited tracking! 🎮
+need help?
 
-**Total time: ~5 minutes**
-**Cost: $0 (completely free)**
-**Worth it: 100% YES** ✨
+henrik api: discord support in #support
+tracker.gg: email developers@tracker.gg
+this project: create a github issue
+
+
+
+summary
+
+ do this:
+join henrik discord  get key (2 min)
+register on tracker.gg  get key (3 min)
+add both to backend/.env
+start backend  test it works
+enjoy unlimited tracking! 
+
+total time: ~5 minutes
+cost: $0 (completely free)
+worth it: 100% yes 
+

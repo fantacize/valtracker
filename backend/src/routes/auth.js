@@ -5,7 +5,7 @@ const valorantService = require('../services/valorant');
 const resolveCurrentIdentity = async () => {
   const user = await valorantService.getCurrentUser();
   if (!user?.puuid) {
-    return { loggedIn: false, user: null, source: 'local_client' };
+    return { loggedIn: false, user: null, source: 'localclient' };
   }
 
   const names = await valorantService.resolvePuuidsToNames([user.puuid]);
@@ -13,7 +13,7 @@ const resolveCurrentIdentity = async () => {
 
   return {
     loggedIn: true,
-    source: 'local_client',
+    source: 'localclient',
     user: {
       puuid: user.puuid,
       region: user.region || 'na',
@@ -34,7 +34,7 @@ router.get('/status', async (req, res) => {
   } catch (error) {
     return res.json({
       loggedIn: false,
-      source: 'local_client',
+      source: 'localclient',
       user: null,
       timestamp: Date.now(),
       message: error.message
@@ -49,7 +49,7 @@ router.post('/login/local', async (req, res) => {
     if (!result.loggedIn) {
       return res.status(400).json({
         loggedIn: false,
-        source: 'local_client',
+        source: 'localclient',
         error: 'VALORANT local client session not available',
         message: 'Open VALORANT and sign in to Riot client first.'
       });
@@ -62,7 +62,7 @@ router.post('/login/local', async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       loggedIn: false,
-      source: 'local_client',
+      source: 'localclient',
       error: 'Failed to login with local client',
       message: error.message
     });

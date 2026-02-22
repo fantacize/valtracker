@@ -1,312 +1,313 @@
-# 🚀 Feature Ideas & Roadmap
+ feature ideas & roadmap
 
-## ✅ Current Features (Implemented)
+ current features (implemented)
 
-### Core Features
-- ✅ Real-time skin tracking for all weapons
-- ✅ Player rank & RR display
-- ✅ Level tracking
-- ✅ Headshot percentage
-- ✅ Win rate stats
-- ✅ K/D ratio
-- ✅ Peak rank display
-- ✅ vtl.lol links (for public profiles)
-- ✅ Match history (last 5 games)
-- ✅ Hidden profile support (shows match history only)
-- ✅ Auto-refresh every 3 seconds
-- ✅ Beautiful team-based UI
-- ✅ Agent detection
-- ✅ Weapon selector
+core features
+ real-time skin tracking for all weapons
+ player rank & rr display
+ level tracking
+ headshot percentage
+ win rate stats
+ k/d ratio
+ peak rank display
+ vtl.lol links (for public profiles)
+ match history (last 5 games)
+ hidden profile support (shows match history only)
+ auto-refresh every 3 seconds
+ beautiful team-based ui
+ agent detection
+ weapon selector
 
-## 🎯 Suggested Features to Add
+ suggested features to add
 
-### High Priority (Game-Changing)
+high priority (game-changing)
 
-#### 1. **Dodge Recommendation System** ⚠️
-Show warnings/recommendations on whether to dodge:
-- Detect smurfs (new accounts with high performance)
-- Flag teammates with recent losing streaks
-- Warn about hard-stuck players with terrible stats
-- Alert for massive rank disparities in the lobby
-- Show "dodge score" from 1-10
+dodge recommendation system 
+show warnings/recommendations on whether to dodge:
+detect smurfs (new accounts with high performance)
+flag teammates with recent losing streaks
+warn about hard-stuck players with terrible stats
+alert for massive rank disparities in the lobby
+show "dodge score" from 1-10
 
-**Implementation:**
-- Analyze account age + K/D + winrate
-- Check recent match performance trends
-- Calculate team composition strength
-- Display prominent warning banner
+implementation:
+analyze account age + k/d + winrate
+check recent match performance trends
+calculate team composition strength
+display prominent warning banner
 
-#### 2. **Win Probability Calculator** 📊
-Predict match outcome based on:
-- Average team MMR
-- Recent performance trends
-- Agent pool synergy
-- Individual player winrates
-- Map-specific stats
+win probability calculator 
+predict match outcome based on:
+average team mmr
+recent performance trends
+agent pool synergy
+individual player winrates
+map-specific stats
 
-**Display:** Percentage chance to win with breakdown
+display: percentage chance to win with breakdown
 
-#### 3. **Live Performance Tracking** 📈
-Track YOUR performance during the match:
-- Real-time K/D updates
-- Round-by-round stats
-- Compare against your average
-- Show if you're over/underperforming
-- Display rank points at risk
+live performance tracking 
+track your performance during the match:
+real-time k/d updates
+round-by-round stats
+compare against your average
+show if you're over/underperforming
+display rank points at risk
 
-#### 4. **Agent Recommendations** 🎭
-Based on:
-- Team composition gaps
-- Your most-played agents
-- Agent winrates on current map
-- Counter-picking enemy team
-- Synergy with teammate selections
+agent recommendations 
+based on:
+team composition gaps
+your most-played agents
+agent winrates on current map
+counter-picking enemy team
+synergy with teammate selections
 
-### Medium Priority (Quality of Life)
+medium priority (quality of life)
 
-#### 5. **Player Notes System** 📝
-- Save notes on players you've encountered
-- Tag players (toxic, good teammate, smurf, etc.)
-- Auto-alert when you queue with them again
-- Search/filter by tags
-- Import/export notes
+player notes system 
+save notes on players you've encountered
+tag players (toxic, good teammate, smurf, etc.)
+auto-alert when you queue with them again
+search/filter by tags
+import/export notes
 
-#### 6. **Streamer Mode Detection** 📺
-- Flag players who are likely streaming
-- Show Twitch/YouTube channels if found
-- Option to auto-hide if you're stream sniping
-- Detect streamer delay
+streamer mode detection 
+flag players who are likely streaming
+show twitch/youtube channels if found
+option to auto-hide if you're stream sniping
+detect streamer delay
 
-#### 7. **Advanced Match History** 📜
-- Show last 20 matches instead of 5
-- Filter by map, agent, mode
-- Performance trends graph
-- Highlight recent win/loss streaks
-- Show rank changes over time
+advanced match history 
+show last 20 matches instead of 5
+filter by map, agent, mode
+performance trends graph
+highlight recent win/loss streaks
+show rank changes over time
 
-#### 8. **Team Composition Analysis** 👥
-Real-time analysis of team comp:
-- Duelist/Controller/Initiator/Sentinel balance
-- Flag if no smokes or no sentinel
-- Show if composition is "meta" or "off-meta"
-- Suggest agent swaps for better balance
+team composition analysis 
+real-time analysis of team comp:
+duelist/controller/initiator/sentinel balance
+flag if no smokes or no sentinel
+show if composition is "meta" or "off-meta"
+suggest agent swaps for better balance
 
-#### 9. **Compare Players** ⚖️
-Side-by-side comparison:
-- You vs. teammates
-- You vs. enemies
-- Best player vs. worst player
-- Team averages comparison
+compare players 
+side-by-side comparison:
+you vs. teammates
+you vs. enemies
+best player vs. worst player
+team averages comparison
 
-#### 10. **Rank Tracker Over Time** 📉
-- Graph showing RR changes
-- Win/loss streaks visualization
-- Peak rank history
-- Rank-up/derank predictions
-- Session stats (today's gains/losses)
+rank tracker over time 
+graph showing rr changes
+win/loss streaks visualization
+peak rank history
+rank-up/derank predictions
+session stats (today's gains/losses)
 
-### Low Priority (Nice to Have)
+low priority (nice to have)
 
-#### 11. **Spray & Buddy Showcase** 🎨
-- Show player's equipped sprays
-- Display gun buddies
-- Track rare/exclusive items
-- Show player cards
+spray & buddy showcase 
+show player's equipped sprays
+display gun buddies
+track rare/exclusive items
+show player cards
 
-#### 12. **Skin Collection Stats** 💎
-For each player:
-- Total skins owned (estimate)
-- Most expensive skin equipped
-- Rarest skin in loadout
-- Average skin cost
+skin collection stats 
+for each player:
+total skins owned (estimate)
+most expensive skin equipped
+rarest skin in loadout
+average skin cost
 
-#### 13. **Voice Chat Indicator** 🎤
-- Show who has voice enabled
-- Detect mic quality (if possible)
-- Flag players likely to comm
-- Show preferred language
+voice chat indicator 
+show who has voice enabled
+detect mic quality (if possible)
+flag players likely to comm
+show preferred language
 
-#### 14. **Auto Screenshot** 📸
-- Automatically save screenshots of:
-  - Match start (all player cards)
-  - Your performance at end
-  - Rare skins spotted
-  - Funny moments (manual trigger)
+auto screenshot 
+automatically save screenshots of:
+match start (all player cards)
+your performance at end
+rare skins spotted
+funny moments (manual trigger)
 
-#### 15. **Match Export** 💾
-Export match data:
-- JSON format for analysis
-- CSV for spreadsheets
-- Share via link
-- Generate match report PDF
+match export 
+export match data:
+json format for analysis
+csv for spreadsheets
+share via link
+generate match report pdf
 
-#### 16. **Desktop Notifications** 🔔
-- Alert when match is found
-- Notify when specific players join
-- Warning notifications for dodging
-- Rank-up/derank notifications
+desktop notifications 
+alert when match is found
+notify when specific players join
+warning notifications for dodging
+rank-up/derank notifications
 
-#### 17. **Friend List Integration** 👫
-- Import friend list from Riot
-- Show when friends are in match
-- Track friends' stats
-- Compare stats with friends
+friend list integration 
+import friend list from riot
+show when friends are in match
+track friends' stats
+compare stats with friends
 
-#### 18. **Clan/Team Features** 🏆
-- Create teams
-- Track team performance
-- Schedule scrims
-- Team average stats
-- Leaderboards
+clan/team features 
+create teams
+track team performance
+schedule scrims
+team average stats
+leaderboards
 
-#### 19. **Custom Overlays** 🖼️
-- OBS/Streamlabs integration
-- In-game overlay (if possible)
-- Custom widgets
-- Transparent mode
+custom overlays 
+obs/streamlabs integration
+in-game overlay (if possible)
+custom widgets
+transparent mode
 
-#### 20. **API for Third Parties** 🔌
-Expose your own API:
-- Let others build on your tracker
-- Webhooks for events
-- Real-time data streaming
-- Developer documentation
+api for third parties 
+expose your own api:
+let others build on your tracker
+webhooks for events
+real-time data streaming
+developer documentation
 
-## 🎨 UI/UX Improvements
+ ui/ux improvements
 
-### Visual Enhancements
-- Dark/light mode toggle
-- Custom themes (colors)
-- Compact/expanded view modes
-- Drag-and-drop card reordering
-- Animated rank badges
-- Sound effects for updates
-- Loading animations
+visual enhancements
+dark/light mode toggle
+custom themes (colors)
+compact/expanded view modes
+drag-and-drop card reordering
+animated rank badges
+sound effects for updates
+loading animations
 
-### Accessibility
-- Screen reader support
-- High contrast mode
-- Font size adjustments
-- Colorblind-friendly modes
-- Keyboard shortcuts
+accessibility
+screen reader support
+high contrast mode
+font size adjustments
+colorblind-friendly modes
+keyboard shortcuts
 
-## 🔧 Technical Improvements
+ technical improvements
 
-### Performance
-- Reduce API calls (smarter caching)
-- Lazy load match history
-- Virtual scrolling for long lists
-- WebSocket for real-time updates
-- Service worker for offline capability
+performance
+reduce api calls (smarter caching)
+lazy load match history
+virtual scrolling for long lists
+websocket for real-time updates
+service worker for offline capability
 
-### Data
-- Store historical data locally
-- Export/import user settings
-- Cloud backup of notes/preferences
-- Data analytics dashboard
-- API usage optimization
+data
+store historical data locally
+export/import user settings
+cloud backup of notes/preferences
+data analytics dashboard
+api usage optimization
 
-### Platform
-- Convert to Electron (desktop app)
-- Mobile app (React Native)
-- Browser extension
-- System tray integration
-- Auto-updater
+platform
+convert to electron (desktop app)
+mobile app (react native)
+browser extension
+system tray integration
+auto-updater
 
-## 💡 Creative/Fun Features
+ creative/fun features
 
-### Gamification
-- Achievement system
-- Collect badges for milestones
-- Level up your tracker profile
-- Rare skin detector alerts
-- "Skin of the Day" showcase
+gamification
+achievement system
+collect badges for milestones
+level up your tracker profile
+rare skin detector alerts
+"skin of the day" showcase
 
-### Social
-- Share match reports on Twitter
-- Generate memes from matches
-- Player reputation system
-- Community leaderboards
-- Find duo partners
+social
+share match reports on twitter
+generate memes from matches
+player reputation system
+community leaderboards
+find duo partners
 
-### Easter Eggs
-- Hidden agent voice lines
-- Konami code surprises
-- Special themes on holidays
-- Random skin facts
-- Dev messages
+easter eggs
+hidden agent voice lines
+konami code surprises
+special themes on holidays
+random skin facts
+dev messages
 
-## 🚦 Implementation Priority
+ implementation priority
 
-**Start with these (High Impact + Easy):**
-1. Dodge recommendation system
-2. Win probability calculator
-3. Player notes system
-4. Advanced match history
-5. Team composition analysis
+start with these (high impact + easy):
+dodge recommendation system
+win probability calculator
+player notes system
+advanced match history
+team composition analysis
 
-**Then add (Medium Impact + Medium Difficulty):**
-6. Agent recommendations
-7. Compare players feature
-8. Rank tracker over time
-9. Streamer mode detection
+then add (medium impact + medium difficulty):
+agent recommendations
+compare players feature
+rank tracker over time
+streamer mode detection
 
-**Nice to have later:**
-10. Everything else based on user feedback!
+nice to have later:
+everything else based on user feedback!
 
-## 📊 Analytics to Track
+ analytics to track
 
-Consider adding:
-- Most common agent picks
-- Average rank in your matches
-- Skin popularity statistics
-- Map win rates
-- Time of day performance
-- Queue time tracking
-- Server latency stats
+consider adding:
+most common agent picks
+average rank in your matches
+skin popularity statistics
+map win rates
+time of day performance
+queue time tracking
+server latency stats
 
-## 🎮 Advanced Features (Ambitious)
+ advanced features (ambitious)
 
-### AI/ML Features
-- ML model to predict match outcome
-- Anomaly detection for smurfs
-- Playstyle classification
-- Performance forecasting
-- Auto-suggest best agents
+ai/ml features
+ml model to predict match outcome
+anomaly detection for smurfs
+playstyle classification
+performance forecasting
+auto-suggest best agents
 
-### Integration Ideas
-- Discord Rich Presence
-- Spotify "Now Playing" 
-- RGB lighting sync with match events
-- Smart home integration (lights)
-- Twitch chat commands
+integration ideas
+discord rich presence
+spotify "now playing"
+rgb lighting sync with match events
+smart home integration (lights)
+twitch chat commands
 
-## 🔐 Privacy Features
+ privacy features
 
-- Hide your own stats from others
-- Anonymous mode
-- Data retention controls
-- GDPR compliance tools
-- Account deletion
+hide your own stats from others
+anonymous mode
+data retention controls
+gdpr compliance tools
+account deletion
 
-## 📱 Mobile App Specific
+ mobile app specific
 
-If you make a mobile version:
-- Push notifications
-- Quick stats check
-- Friend status
-- Match alerts
-- Simplified UI for small screens
+if you make a mobile version:
+push notifications
+quick stats check
+friend status
+match alerts
+simplified ui for small screens
 
----
 
-## ❓ Which Features Should You Build First?
 
-**My Recommendations:**
-1. **Dodge Recommendation** - Highest value for competitive players
-2. **Win Probability** - Fun and useful
-3. **Player Notes** - Great for recurring players
-4. **Team Comp Analysis** - Quick value add
-5. **Advanced Match History** - Useful for everyone
+ which features should you build first?
 
-After that, let user feedback guide you!
+my recommendations:
+dodge recommendation - highest value for competitive players
+win probability - fun and useful
+player notes - great for recurring players
+team comp analysis - quick value add
+advanced match history - useful for everyone
+
+after that, let user feedback guide you!
+

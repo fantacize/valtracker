@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import './LiveTracker.css';
 
-const API_URL = 'http://localhost:3000';
+const apiUrl = 'http://localhost:3000';
 
 const createDemoPlayer = (id, agent, name, teamId, utilRate, demoWeapons = {}) => ({
   id,
@@ -133,7 +133,7 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
     setLoading(true);
     setError(null);
     try {
-      const scoreboardResponse = await fetch(`${API_URL}/api/match/scoreboard/current?source=henrik`);
+      const scoreboardResponse = await fetch(`${apiUrl}/api/match/scoreboard/current?source=henrik`);
       if (!scoreboardResponse.ok) {
         const text = await scoreboardResponse.text();
         throw new Error(text || `Request failed (${scoreboardResponse.status})`);
@@ -142,7 +142,7 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
       if (data.inGame) {
         // Render live data immediately; hydrate weapon skins in a follow-up request.
         setLiveData(data);
-        fetch(`${API_URL}/api/match/current`)
+        fetch(`${apiUrl}/api/match/current`)
           .then(async (resp) => {
             if (!resp.ok) return null;
             return resp.json();

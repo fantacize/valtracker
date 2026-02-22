@@ -7,7 +7,7 @@ const axios = require('axios');
 class TrackerService {
   constructor() {
     this.baseUrl = 'https://api.tracker.gg/api/v2/valorant';
-    this.apiKey = process.env.TRACKER_API_KEY || '';
+    this.apiKey = process.env.TRACKERAPIKEY || process.env.trackerapikey || '';
   }
 
   /**
@@ -25,8 +25,8 @@ class TrackerService {
    */
   async getProfile(name, tag) {
     if (!this.apiKey) {
-      const error = new Error('TRACKER_API_KEY is not configured');
-      error.code = 'TRACKER_KEY_MISSING';
+      const error = new Error('TRACKERAPIKEY is not configured');
+      error.code = 'TRACKERKEYMISSING';
       throw error;
     }
 
@@ -51,9 +51,9 @@ class TrackerService {
         return null;
       }
       if (error.response?.status === 401 || error.response?.status === 403) {
-        error.code = 'TRACKER_AUTH_FAILED';
+        error.code = 'TRACKERAUTHFAILED';
       } else if (error.response?.status === 429) {
-        error.code = 'TRACKER_RATE_LIMITED';
+        error.code = 'TRACKERRATELIMITED';
       }
       console.error('Tracker.gg API error:', error.message);
       throw error;
@@ -226,7 +226,7 @@ class TrackerService {
       const profile = await this.getProfile(name, tag);
       
       if (!profile) {
-        return { data: null, unavailableReason: 'tracker_profile_not_found' };
+        return { data: null, unavailableReason: 'trackerProfileNotFound' };
       }
 
       return {
@@ -241,16 +241,16 @@ class TrackerService {
       };
     } catch (error) {
       console.error('Error getting player stats:', error.message);
-      if (error.code === 'TRACKER_KEY_MISSING') {
-        return { data: null, unavailableReason: 'tracker_key_missing' };
+      if (error.code === 'TRACKERKEYMISSING') {
+        return { data: null, unavailableReason: 'trackerKeyMissing' };
       }
-      if (error.code === 'TRACKER_AUTH_FAILED') {
-        return { data: null, unavailableReason: 'tracker_auth_failed' };
+      if (error.code === 'TRACKERAUTHFAILED') {
+        return { data: null, unavailableReason: 'trackerAuthFailed' };
       }
-      if (error.code === 'TRACKER_RATE_LIMITED') {
-        return { data: null, unavailableReason: 'tracker_rate_limited' };
+      if (error.code === 'TRACKERRATELIMITED') {
+        return { data: null, unavailableReason: 'trackerRateLimited' };
       }
-      return { data: null, unavailableReason: 'tracker_unavailable' };
+      return { data: null, unavailableReason: 'trackerUnavailable' };
     }
   }
 }

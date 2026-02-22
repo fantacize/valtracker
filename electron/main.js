@@ -4,10 +4,10 @@ const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-const APP_PORT = 3000;
-const HEALTH_URL = `http://127.0.0.1:${APP_PORT}/health`;
-const START_TIMEOUT_MS = 120000;
-const POLL_INTERVAL_MS = 1000;
+const appPort = 3000;
+const healthUrl = `http://127.0.0.1:${appPort}/health`;
+const startTimeoutMs = 120000;
+const pollIntervalMs = 1000;
 
 let mainWindow = null;
 let backendProcess = null;
@@ -31,7 +31,7 @@ function resolveBackendExePath() {
 
 function pingHealth() {
   return new Promise((resolve) => {
-    const req = http.get(HEALTH_URL, (res) => {
+    const req = http.get(healthUrl, (res) => {
       res.resume();
       resolve(res.statusCode >= 200 && res.statusCode < 500);
     });
@@ -50,7 +50,7 @@ async function waitForServer(timeoutMs) {
     if (await pingHealth()) {
       return true;
     }
-    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+    await new Promise((r) => setTimeout(r, pollIntervalMs));
   }
   return false;
 }
@@ -115,13 +115,13 @@ function createWindow() {
     mainWindow = null;
   });
 
-  mainWindow.loadURL(`http://127.0.0.1:${APP_PORT}`);
+  mainWindow.loadURL(`http://127.0.0.1:${appPort}`);
 }
 
 async function bootstrap() {
   startBackend();
 
-  const backendReady = await waitForServer(START_TIMEOUT_MS);
+  const backendReady = await waitForServer(startTimeoutMs);
   if (!backendReady) {
     throw new Error(
       'Backend did not become ready in time. Try rebuilding with `npm run electron:build:backend`.'
