@@ -1,0 +1,25 @@
+[2026.03.19-16.06.32] Operating system: Windows 10 Professional 10.0.22631
+
+[2026.03.19-16.06.32] Getting versions from valorant-api.com for account auth-ing
+[2026.03.19-16.06.32] Account manager initialized
+[2026.03.19-16.06.33] opened lockfile
+[2026.03.19-16.06.33] got region from logs '['na', ['na-1', 'na']]'
+[2026.03.19-16.06.33] Api urls: pd_url: 'https://pd.na.a.pvp.net', glz_url: 'https://glz-na-1.na.a.pvp.net'
+[2026.03.19-16.06.33] https://127.0.0.1:58130/entitlements/v1/token
+{'Authorization': 'Basic cmlvdDpPcXlBb21Pd1EzVHFFTWFsZXRZSEpn'}
+[2026.03.19-16.06.33] got version from logs 'release-12.05-shipping-22-4360629'
+[2026.03.19-16.06.33] config.json not found, creating new one
+[2026.03.19-16.06.33] color config prompt called
+[2026.03.19-16.06.33] config opened
+[2026.03.19-16.06.33] config class dict: {'log': <bound method Logging.log of <src.logs.Logging object at 0x0000020A044E3C70>>, 'cooldown': 10, 'port': 1100, 'weapon': 'Vandal', 'chat_limit': 5, 'table': {'skin': True, 'rr': True, 'earned_rr': True, 'peakrank': True, 'previousrank': False, 'leaderboard': True, 'headshot_percent': True, 'winrate': True, 'kd': False, 'level': True}, 'flags': {'last_played': True, 'auto_hide_leaderboard': True, 'pre_cls': False, 'game_chat': True, 'peak_rank_act': True, 'discord_rpc': True, 'aggregate_rank_rr': True, 'server_id': False, 'short_ranks': False, 'truncate_skins': True, 'truncate_names': True}}
+[2026.03.19-16.06.33] got cooldown with value '10'
+[2026.03.19-16.06.33] retrieved agent dict: {None: None, '': '', 'e370fa57-4757-3604-3648-499e1f642d3f': 'Gekko', 'dade69b4-4f5a-8528-247b-219e5a1facd6': 'Fade', '5f8d3a7f-467b-97f3-062c-13acf203c006': 'Breach', 'cc8b64c8-4b25-4ff9-6e7f-37b4da43d235': 'Deadlock', 'b444168c-4e35-8076-db47-ef9bf368f384': 'Tejo', 'f94c3b30-42be-e959-889c-5aa313dba261': 'Raze', '22697a3d-45bf-8dd7-4fec-84a9e28c69d7': 'Chamber', '601dbbe7-43ce-be57-2a40-4abd24953621': 'KAY/O', '6f2a04ca-43e0-be17-7f36-b3908627744d': 'Skye', '117ed9e3-49f3-6512-3ccf-0cada7e3823b': 'Cypher', '320b2a48-4d9b-a075-30f1-1f93a9b638fa': 'Sova', '7c8a4701-4de6-9355-b254-e09bc2a34b72': 'Miks', '1e58de9c-4950-5125-93e9-a0aee9f98746': 'Killjoy', '95b78ed7-4637-86d9-7e41-71ba8c293152': 'Harbor', 'efba5359-4016-a1e5-7626-b1ae76895940': 'Vyse', '707eab51-4836-f488-046a-cda6bf494859': 'Viper', 'eb93336a-449b-9c1b-0a54-a891f7921d69': 'Phoenix', '92eeef5d-43b5-1d4a-8d03-b3927a09034b': 'Veto', '41fb69c1-4189-7b37-f117-bcaf1e96f1bf': 'Astra', '9f0d8ba9-4140-b941-57d3-a7ad57c6b417': 'Brimstone', '0e38b510-41a8-5780-5e8f-568b2a4f2d6c': 'Iso', '1dbf2edd-4729-0984-3115-daa5eed44993': 'Clove', 'bb2a4828-46eb-8cd1-e765-15848195d751': 'Neon', '7f94d92c-4234-0a36-9646-3a87eb8b5c89': 'Yoru', 'df1cb487-4902-002e-5c17-d28e83e78588': 'Waylay', '569fdd95-4d10-43ab-ca70-79becc718b46': 'Sage', 'a3bfb853-43b2-7238-a4f1-ad90e9e46bcc': 'Reyna', '8e253930-4c05-31dd-1b6c-968525494517': 'Omen', 'add6443a-41bd-e414-f6ad-e58d267f4e95': 'Jett'}
+[2026.03.19-16.06.33] retrieved map dict: {None: None, '/game/maps/ascent/ascent': 'Ascent', '/game/maps/bonsai/bonsai': 'Split', '/game/maps/canyon/canyon': 'Fracture', '/game/maps/duality/duality': 'Bind', '/game/maps/duel/duel_1/skirmish_a': 'Skirmish A', '/game/maps/duel/duel_2/skirmish_b': 'Skirmish B', '/game/maps/duel/duel_3/skirmish_c': 'Skirmish C', '/game/maps/foxtrot/foxtrot': 'Breeze', '/game/maps/hurm/hurm_alley/hurm_alley': 'District', '/game/maps/hurm/hurm_bowl/hurm_bowl': 'Kasbah', '/game/maps/hurm/hurm_helix/hurm_helix': 'Drift', '/game/maps/hurm/hurm_hightide/hurm_hightide': 'Glitch', '/game/maps/hurm/hurm_yard/hurm_yard': 'Piazza', '/game/maps/infinity/infinity': 'Abyss', '/game/maps/jam/jam': 'Lotus', '/game/maps/juliett/juliett': 'Sunset', '/game/maps/npev2/npev2': 'Basic Training', '/game/maps/pitt/pitt': 'Pearl', '/game/maps/port/port': 'Icebox', '/game/maps/poveglia/range': 'The Range', '/game/maps/povegliav2/rangev2': 'The Range', '/game/maps/rook/rook': 'Corrode', '/game/maps/triad/triad': 'Haven'}
+[2026.03.19-16.06.33] fetch: url: 'glz', endpoint: /core-game/v1/players/8154ee10-a5a5-5e51-a2c8-9583cbe285ff, method: get, response code: 404
+[2026.03.19-16.06.33] VALORANT rank yoinker v2.93
+[2026.03.19-16.06.33] RPC: Failed to connect: [WinError 5] Access is denied
+[2026.03.19-16.06.33] fetch: url: 'custom', endpoint: https://shared.na.a.pvp.net/content-service/v3/content, method: get, response code: 200
+[2026.03.19-16.06.33] retrieved season id: 9d85c932-4820-c060-09c3-668636d4df1b
+[2026.03.19-16.06.33] retrieved previous season id: 3ea2b318-423b-cf86-25da-7cbb0eefbe2d
+[2026.03.19-16.06.34] RPC: Failed to connect: [WinError 5] Access is denied
+[2026.03.19-16.06.36] RPC: Failed to connect: [WinError 5] Access is denied

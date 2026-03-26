@@ -428,6 +428,15 @@ class ValorantService {
     }
 
     const content = await this.makeSharedRequest('/content-service/v3/content');
+
+    if (!content || typeof content !== 'object') {
+      throw new Error(`Unexpected content-service response: ${JSON.stringify(content)}`);
+    }
+
+    if (!Array.isArray(content.Seasons)) {
+      throw new Error(`'Seasons' missing or invalid in content-service response: ${JSON.stringify(content).slice(0, 500)}`);
+    }
+
     this.contentCache = content;
     this.contentCacheTs = now;
     return content;
@@ -605,7 +614,9 @@ class ValorantService {
       try {
         content = await this.getContentServiceData();
         activeSeasonId = this.getActiveActSeasonId(content);
-      } catch {}
+      } catch (err) {
+        console.error('[RankInfo] content-service failed:', err.message || err);
+      }
 
       // Direct port of yoink/src/rank.py
       try {
