@@ -134,13 +134,6 @@ class LockfileService {
   }
 
   /**
-   * Check if VALORANT is running by checking if lockfile exists
-   */
-  isValorantRunning() {
-    return this.lockfileCandidates.some((candidate) => fs.existsSync(candidate));
-  }
-
-  /**
    * Force refresh lockfile credentials
    */
   refreshCredentials() {

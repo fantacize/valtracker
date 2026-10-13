@@ -1,21 +1,26 @@
 export const demoMatchData = {
   inGame: true,
   map: '/Game/Maps/Ascent/Ascent',
-  mode: 'Bomb',
+  mode: '/Game/GameModes/Bomb/BombGameMode.BombGameMode_C',
+  queueId: 'competitive',
   userTeam: 'Red',
-  cached: true,
+  round: 19,
+  score: { ally: 7, enemy: 11, round: 19 },
   players: [
     {
       puuid: 'demo-red-1',
+      nameHidden: true,
       gameName: 'Flocked',
       tagLine: 'NA1',
       name: 'Flocked#NA1',
       accountLevel: 212,
-      characterId: 'e370fa57-4757-3604-3648-499e1f642d3f',
+      characterId: 'add6443a-41bd-e414-f6ad-e58d267f4e95',
+      agentName: 'Jett',
       teamId: 'Red',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Ascendant 2', rr: 78, peakRank: 'Immortal 1' },
+        yoink: { peakActEpisode: { episodeNumber: 'v26', actNumber: 2 }, statMatches: 134, statScope: 'act' },
         stats: {
           kd: 1.45,
           headshotPct: 24.6,
@@ -34,15 +39,18 @@ export const demoMatchData = {
     },
     {
       puuid: 'demo-red-2',
+      encounters: { games: 3, with: { games: 2, wins: 2, losses: 0 }, against: { games: 1, wins: 0, losses: 1 }, last: { startedAt: Date.now() - 2 * 86400000, map: 'Bind', sameTeam: false, won: false, queue: 'competitive' }, lastName: null },
       gameName: 'Reyna',
       tagLine: 'NA1',
       name: 'Reyna#NA1',
       accountLevel: 87,
-      characterId: 'add6443a-41bd-e414-f6ad-e58d267f4e95',
+      characterId: 'a3bfb853-43b2-7238-a4f1-ad90e9e46bcc',
+      agentName: 'Reyna',
       teamId: 'Red',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Diamond 2', rr: 44, peakRank: 'Diamond 3' },
+        yoink: { peakActEpisode: { episodeNumber: 9, actNumber: 3 }, statMatches: 88, statScope: 'act' },
         stats: {
           kd: 1.18,
           headshotPct: 19.1,
@@ -64,11 +72,13 @@ export const demoMatchData = {
       tagLine: 'NA1',
       name: 'SovaScan#NA1',
       accountLevel: 132,
-      characterId: '6f2a04ca-43e0-be17-7f36-b3908627744d',
+      characterId: '320b2a48-4d9b-a075-30f1-1f93a9b638fa',
+      agentName: 'Sova',
       teamId: 'Red',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Platinum 3', rr: 12, peakRank: 'Diamond 1' },
+        yoink: { peakActEpisode: { episodeNumber: 'v25', actNumber: 6 }, statMatches: 52, statScope: 'act' },
         stats: {
           kd: 0.94,
           headshotPct: 15.4,
@@ -91,10 +101,12 @@ export const demoMatchData = {
       name: 'ViperLine#NA1',
       accountLevel: 64,
       characterId: '707eab51-4836-f488-046a-cda6bf494859',
+      agentName: 'Viper',
       teamId: 'Red',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Gold 2', rr: 88, peakRank: 'Platinum 1' },
+        yoink: { peakActEpisode: { episodeNumber: 'v26', actNumber: 2 }, statMatches: 71, statScope: 'act' },
         stats: {
           kd: 0.83,
           headshotPct: 13.9,
@@ -117,10 +129,12 @@ export const demoMatchData = {
       name: 'OmenFade#NA1',
       accountLevel: 55,
       characterId: '8e253930-4c05-31dd-1b6c-968525494517',
+      agentName: 'Omen',
       teamId: 'Red',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Silver 3', rr: 22, peakRank: 'Gold 1' },
+        yoink: { peakActEpisode: { episodeNumber: 9, actNumber: 3 }, statMatches: 40, statScope: 'act' },
         stats: {
           kd: 0.71,
           headshotPct: 10.4,
@@ -142,11 +156,13 @@ export const demoMatchData = {
       tagLine: 'NA1',
       name: 'AresDemon#NA1',
       accountLevel: 201,
-      characterId: '7f94d92c-4234-0a36-9646-3a87eb8b5c89',
+      characterId: 'eb93336a-449b-9c1b-0a54-a891f7921d69',
+      agentName: 'Phoenix',
       teamId: 'Blue',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Immortal 1', rr: 22, peakRank: 'Immortal 2' },
+        yoink: { peakActEpisode: { episodeNumber: 'v25', actNumber: 6 }, statMatches: 134, statScope: 'act' },
         stats: {
           kd: 1.32,
           headshotPct: 22.3,
@@ -168,11 +184,13 @@ export const demoMatchData = {
       tagLine: 'NA1',
       name: 'Raider#NA1',
       accountLevel: 92,
-      characterId: '117ed9e3-49f3-6512-3ccf-0cada7e3823b',
+      characterId: '1e58de9c-4950-5125-93e9-a0aee9f98746',
+      agentName: 'Killjoy',
       teamId: 'Blue',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Platinum 1', rr: 54, peakRank: 'Platinum 3' },
+        yoink: { peakActEpisode: { episodeNumber: 'v26', actNumber: 2 }, statMatches: 88, statScope: 'act' },
         stats: {
           kd: 1.02,
           headshotPct: 17.2,
@@ -190,15 +208,18 @@ export const demoMatchData = {
     },
     {
       puuid: 'demo-blue-3',
+      encounters: { games: 3, with: { games: 2, wins: 2, losses: 0 }, against: { games: 1, wins: 0, losses: 1 }, last: { startedAt: Date.now() - 2 * 86400000, map: 'Bind', sameTeam: false, won: false, queue: 'competitive' }, lastName: null },
       gameName: 'NutsJuice',
       tagLine: 'NA1',
       name: 'NutsJuice#NA1',
       accountLevel: 77,
-      characterId: 'd0f5d7c1-4f7d-2d3d-52ad-ff498239f2d6',
+      characterId: '569fdd95-4d10-43ab-ca70-79becc718b46',
+      agentName: 'Sage',
       teamId: 'Blue',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Gold 3', rr: 9, peakRank: 'Platinum 1' },
+        yoink: { peakActEpisode: { episodeNumber: 9, actNumber: 3 }, statMatches: 52, statScope: 'act' },
         stats: {
           kd: 0.96,
           headshotPct: 14.6,
@@ -220,11 +241,13 @@ export const demoMatchData = {
       tagLine: 'NA1',
       name: 'lemonI#NA1',
       accountLevel: 61,
-      characterId: '9f0d8ba9-4140-b941-57d3-e0b2b8ff1d5c',
+      characterId: '117ed9e3-49f3-6512-3ccf-0cada7e3823b',
+      agentName: 'Cypher',
       teamId: 'Blue',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Silver 2', rr: 65, peakRank: 'Gold 2' },
+        yoink: { peakActEpisode: { episodeNumber: 'v25', actNumber: 6 }, statMatches: 71, statScope: 'act' },
         stats: {
           kd: 0.84,
           headshotPct: 12.1,
@@ -246,11 +269,13 @@ export const demoMatchData = {
       tagLine: 'NA1',
       name: 'VeggyJuice#NA1',
       accountLevel: 58,
-      characterId: '5f8d3a7f-467b-97f3-062c-13acf203c006',
+      characterId: 'f94c3b30-42be-e959-889c-5aa313dba261',
+      agentName: 'Raze',
       teamId: 'Blue',
       isDemo: true,
       demoStats: {
         rank: { tier: 'Bronze 3', rr: 33, peakRank: 'Silver 1' },
+        yoink: { peakActEpisode: { episodeNumber: 'v26', actNumber: 2 }, statMatches: 40, statScope: 'act' },
         stats: {
           kd: 0.69,
           headshotPct: 9.7,

@@ -27,3 +27,10 @@ electron-dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Packaged app and generated bundles (rebuilt by `npm run build`)
+release/
+backend/public/
+desktop-dotnet/**/bin/
+desktop-dotnet/**/obj/
+*.WebView2/

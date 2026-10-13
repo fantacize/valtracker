@@ -565,28 +565,6 @@ class ValorantService {
     };
   }
 
-  getPeakTierAndSeason(seasonalInfo = {}, fallbackTier = 0, fallbackSeason = null) {
-    let peakTier = Number(fallbackTier || 0);
-    let peakSeason = fallbackSeason;
-
-    for (const [seasonId, seasonData] of Object.entries(seasonalInfo)) {
-      const winsByTier = seasonData?.WinsByTier || [];
-      for (const tier of winsByTier) {
-        let value = Number(tier || 0);
-        // Match yoink rank.py behavior for pre-Ascendant seasons.
-        if (beforeAscendantSeasons.has(seasonId) && value > 20) {
-          value += 3;
-        }
-        if (value > peakTier) {
-          peakTier = value;
-          peakSeason = seasonId;
-        }
-      }
-    }
-
-    return { peakTier, peakSeason };
-  }
-
   rankNameFromTier(tier) {
     const raw = Number(tier || 0);
     const idx = Number.isFinite(raw) ? Math.max(0, Math.min(27, raw)) : 0;
@@ -910,35 +888,6 @@ class ValorantService {
   }
 
   /**
-   * Get presence data (includes current game state and match ID)
-   */
-  async getPresence() {
-    try {
-      const data = await this.makeLocalRequest('/chat/v4/presences');
-      const presences = data.presences;
-
-      if (!this.currentPuuid) {
-        await this.getCurrentUser();
-      }
-
-      // Find current user's presence
-      const myPresence = presences.find(p => p.puuid === this.currentPuuid);
-      
-      if (!myPresence || !myPresence.private) {
-        return null;
-      }
-
-      // Decode private presence data
-      const privateData = JSON.parse(Buffer.from(myPresence.private, 'base64').toString());
-      
-      return privateData;
-    } catch (error) {
-      console.error('Error getting presence:', error.message);
-      return null;
-    }
-  }
-
-  /**
    * Get current match data
    */
   async getCurrentMatch() {
@@ -1053,31 +1002,6 @@ class ValorantService {
         }
       }
       console.error('Error getting match loadouts:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Get live scoreboard for current match
-   */
-  async getMatchScoreboard(matchId, source = 'auto') {
-    try {
-      if (source === 'glz') {
-        return await this.makeGlzRequest(`/core-game/v1/matches/${matchId}/scoreboard`);
-      }
-
-      return await this.makeLocalRequest(`/core-game/v1/matches/${matchId}/scoreboard`);
-    } catch (error) {
-      const isNotFound = error.response?.status === 404;
-      if (isNotFound && source !== 'glz') {
-        try {
-          console.warn(`Local scoreboard lookup failed for ${matchId}, trying GLZ.`);
-          return await this.makeGlzRequest(`/core-game/v1/matches/${matchId}/scoreboard`);
-        } catch (glzError) {
-          console.error('GLZ scoreboard lookup also failed:', glzError.message);
-        }
-      }
-      console.error('Error getting match scoreboard:', error.message);
       throw error;
     }
   }

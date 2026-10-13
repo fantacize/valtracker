@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import MatchOverview from './components/MatchOverview';
 import PregameLobby from './components/PregameLobby';
-import LiveTracker from './components/LiveTracker';
 import AccountHub from './components/AccountHub';
 import WeaponMenu from './components/WeaponMenu';
+import { demoMatchData } from './data/demoMatch';
+import { modeName, queueLabel } from './lib/gameNames';
 import './App.css';
 
 const isBrowser = typeof window !== 'undefined';
@@ -33,7 +34,6 @@ const weaponFilterOptions = [
 
 const navItems = [
   { id: 'tracker', label: 'Lobby', icon: 'grid' },
-  { id: 'live-game', label: 'Live match', icon: 'pulse' },
   { id: 'account', label: 'Account', icon: 'bag' },
   { id: 'live-demo', label: 'Demo', icon: 'flask' }
 ];
@@ -209,23 +209,6 @@ function App() {
     );
   };
 
-  const getQueueLabel = (queueId) => {
-    if (!queueId) return 'Unknown';
-    const map = {
-      competitive: 'Competitive',
-      unrated: 'Unrated',
-      swiftplay: 'Swiftplay',
-      spikerush: 'Spike Rush',
-      deathmatch: 'Deathmatch',
-      escalation: 'Escalation',
-      replication: 'Replication',
-      onefa: 'Deathmatch (FFA)',
-      snowball: 'Snowball Fight',
-      ggteam: 'Team Deathmatch'
-    };
-    return map[queueId] || queueId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-  };
-
   const joinQueue = async () => {
     if (!status.valorantRunning || !selectedQueueId) return;
     setQueueActionLoading(true);
@@ -240,7 +223,7 @@ function App() {
       if (!response.ok) {
         throw new Error(data.message || data.error || `Queue join failed (${response.status})`);
       }
-      setQueueActionMessage(`Queued: ${getQueueLabel(data.queueId || selectedQueueId)}`);
+      setQueueActionMessage(`Queued: ${queueLabel(data.queueId || selectedQueueId)}`);
       fetchQueueModes();
     } catch (err) {
       console.error('Error joining queue:', err);
@@ -259,19 +242,6 @@ function App() {
       await fetchMatchData();
     }
     await fetchQueueModes();
-  };
-
-  const getModeName = (modeId) => {
-    if (!modeId || typeof modeId !== 'string') return 'Not in match';
-    if (modeId.includes('Bomb')) return 'Competitive';
-    if (modeId.includes('QuickBomb')) return 'Unrated';
-    if (modeId.includes('Deathmatch')) return 'Deathmatch';
-    if (modeId.includes('SpikeRush')) return 'Spike Rush';
-    if (modeId.includes('Escalation')) return 'Escalation';
-    if (modeId.includes('Replication')) return 'Replication';
-    if (modeId.includes('Snowball')) return 'Snowball Fight';
-    if (modeId.includes('Swiftplay')) return 'Swiftplay';
-    return 'Custom';
   };
 
   // Initial load
@@ -366,7 +336,7 @@ function App() {
   }, [queueState.inQueue, queueState.queueStartedAt, status.valorantRunning, queueTimerStartedAt]);
 
   const modeLabel = matchData?.inGame
-    ? getModeName(matchData.mode)
+    ? modeName({ queueId: matchData.queueId, modeId: matchData.mode })
     : pregameData?.inPregame ? 'Agent select' : 'Not in match';
   const queueElapsedSeconds = queueState.inQueue && queueTimerStartedAt
     ? Math.max(0, Math.floor((nowTs - queueTimerStartedAt) / 1000))
@@ -415,7 +385,7 @@ function App() {
             <span className={`session-pill ${queueState.inQueue ? 'searching' : ''}`}>
               <span className="session-dot" />
               {queueState.inQueue
-                ? `Searching ${getQueueLabel(queueState.currentQueueId || selectedQueueId)} · ${queueElapsedLabel}`
+                ? `Searching ${queueLabel(queueState.currentQueueId || selectedQueueId)} · ${queueElapsedLabel}`
                 : modeLabel}
             </span>
           </div>
@@ -436,7 +406,7 @@ function App() {
                 {queueModes.length === 0 ? (
                   <option value="">No modes</option>
                 ) : queueModes.map((mode) => (
-                  <option key={mode.queueId} value={mode.queueId}>{getQueueLabel(mode.queueId)}</option>
+                  <option key={mode.queueId} value={mode.queueId}>{queueLabel(mode.queueId)}</option>
                 ))}
               </select>
               <button className="btn btn-primary" onClick={joinQueue} disabled={!status.valorantRunning || queueActionLoading || !selectedQueueId} type="button">
@@ -480,9 +450,7 @@ function App() {
             {activeTab === 'account' ? (
               <AccountHub apiUrl={apiUrl} enabled={authStatus.loggedIn} />
             ) : activeTab === 'live-demo' ? (
-              <LiveTracker demoMode selectedWeapons={selectedWeapons} />
-            ) : activeTab === 'live-game' ? (
-              <LiveTracker demoMode={false} selectedWeapons={selectedWeapons} />
+              <MatchOverview matchData={demoMatchData} selectedWeapons={selectedWeapons} />
             ) : (
               <>
                 {!status.valorantRunning && (

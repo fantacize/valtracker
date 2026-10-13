@@ -4,7 +4,6 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const matchRoutes = require('./routes/match');
-const playerRoutes = require('./routes/player');
 const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
 const runtimeStateService = require('./services/runtimeState');
@@ -45,7 +44,6 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/match', matchRoutes);
-app.use('/api/player', playerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/account', accountRoutes);
 
@@ -88,8 +86,6 @@ app.get('/api', (req, res) => {
         status: 'GET /api/match/status',
         current: 'GET /api/match/current',
         pregame: 'GET /api/match/pregame/current',
-        loadouts: 'GET /api/match/loadouts/:matchId',
-        queueStatus: 'GET /api/match/queue-status?region=na',
         queueModes: 'GET /api/match/queue/modes',
         queueJoin: 'POST /api/match/queue/join'
       },
@@ -99,11 +95,6 @@ app.get('/api', (req, res) => {
       },
       account: {
         overview: 'GET /api/account/overview'
-      },
-      player: {
-        byName: 'GET /api/player/:name/:tag',
-        byPuuid: 'GET /api/player/puuid/:puuid',
-        matchHistory: 'GET /api/player/match-history/:name/:tag'
       }
     }
   });
@@ -158,7 +149,7 @@ const server = app.listen(PORT, '127.0.0.1', () => {
   console.log(`Server running on: http://localhost:${PORT}`);
   console.log('Endpoints:');
   console.log('- GET /api/match/current');
-  console.log('- GET /api/player/:name/:tag');
+  console.log('- GET /api/match/pregame/current');
   console.log('======================================');
 });
 

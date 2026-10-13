@@ -2,28 +2,9 @@ import './PregameLobby.css';
 import SeenTag from './SeenTag';
 import AgentAvatar from './AgentAvatar';
 import MapBanner from './MapBanner';
+import { mapName } from '../lib/gameNames';
 
 function PregameLobby({ data }) {
-  const mapCodenameToName = {
-    Infinity: 'Abyss',
-    Ascent: 'Ascent',
-    Duality: 'Bind',
-    Foxtrot: 'Breeze',
-    Canyon: 'Fracture',
-    Triad: 'Haven',
-    Port: 'Icebox',
-    Jam: 'Lotus',
-    Pitt: 'Pearl',
-    Bonsai: 'Split',
-    Juliett: 'Sunset',
-    HURMAlley: 'District',
-    HURMHelix: 'Drift',
-    HURMBowl: 'Kasbah',
-    HURMYard: 'Piazza',
-    Poveglia: 'Range',
-    Rook: 'Corrode'
-  };
-
   if (!data?.inPregame) return null;
 
   const teams = { Red: [], Blue: [] };
@@ -51,26 +32,12 @@ function PregameLobby({ data }) {
     return null;
   };
 
-  const getMapName = (mapId) => {
-    const raw = String(mapId || '');
-    if (!raw) return 'Unknown Map';
-    const lowerRaw = raw.toLowerCase();
-    const normalizedRaw = lowerRaw.replace(/_/g, '');
-    for (const [code, name] of Object.entries(mapCodenameToName)) {
-      const normalizedCode = String(code).toLowerCase().replace(/_/g, '');
-      if (normalizedRaw.includes(normalizedCode)) {
-        return name;
-      }
-    }
-    return raw.split('/').filter(Boolean).pop() || raw;
-  };
-
   return (
     <div className="pregame-lobby">
       <MapBanner mapPath={data.map}>
         <div className="pregame-header">
           <div>
-            <h2>{getMapName(data.map)}</h2>
+            <h2>{mapName(data.map)}</h2>
             <p>Agent select</p>
           </div>
           <div className="pregame-count"><strong>{(data.players || []).length}</strong><span>players</span></div>

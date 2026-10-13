@@ -236,19 +236,6 @@ function PlayerCard({ player, selectedWeapons = [] }) {
   return (
     <div className={`player-row ${showSkins ? 'expanded' : ''}`}>
       <div className="pr-main">
-        <span className="pr-party">
-          {player.partyBadge && (
-            <span
-              className="party-badge"
-              style={{ '--party-color': player.partyBadge.color }}
-              title={`Party ${player.partyBadge.partyNumber}`}
-              aria-label={`Party ${player.partyBadge.partyNumber}`}
-            >
-              {player.partyBadge.label}
-            </span>
-          )}
-        </span>
-
         <AgentAvatar characterId={player.characterId} agentName={player.agentName} size={34} />
 
         <div className="pr-identity">
