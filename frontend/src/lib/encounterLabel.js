@@ -22,5 +22,12 @@ export const describeEncounter = (summary, { now, currentName }) => {
     summary.lastName && currentName && summary.lastName !== currentName ? `Was ${summary.lastName}` : null
   ].filter(Boolean);
 
-  return { label: `Seen ${summary.games}×`, details: lines.join('\n') };
+  const wins = (summary.with?.wins || 0) + (summary.against?.wins || 0);
+  const losses = (summary.with?.losses || 0) + (summary.against?.losses || 0);
+
+  return {
+    label: `Seen ${summary.games}×`,
+    short: `${summary.games}× · ${wins}W ${losses}L`,
+    details: lines.join('\n')
+  };
 };

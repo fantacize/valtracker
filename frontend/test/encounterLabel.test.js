@@ -52,3 +52,7 @@ test('omits a side you have never played on', () => {
 
   assert.ok(!details.includes('Against you'));
 });
+
+test('a compact record for table columns', () => {
+  assert.equal(describeEncounter(summary(), { now: NOW, currentName: 'OldName#EU' }).short, '3× · 2W 1L');
+});

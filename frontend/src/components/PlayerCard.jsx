@@ -6,7 +6,7 @@ import { formatActLabel } from '../lib/actLabel';
 import { statTone } from '../lib/statTone';
 import AgentAvatar from './AgentAvatar';
 
-function PlayerCard({ player, selectedWeapons = [] }) {
+function PlayerCard({ player, selectedWeapons = [], teamColor = 'neutral' }) {
   const buildYoinkFallback = () => {
     if (!player?.yoinkStats) return null;
     return {
@@ -184,24 +184,6 @@ function PlayerCard({ player, selectedWeapons = [] }) {
     return compact.length > 0 ? compact.join(' ') : null;
   })();
 
-  const trackerReason = playerStats?.trackerUnavailableReason || null;
-  const trackerReasonLabel = (() => {
-    if (
-      !trackerReason ||
-      trackerReason === 'usingYoinkOnly' ||
-      trackerReason === 'usingHenrikOnly' ||
-      trackerReason === 'usingHenrikAndYoink'
-    ) return null;
-    const map = {
-      usingYoinkOnly: 'Using yoink source only (Riot local APIs).',
-      trackerKeyMissing: 'Tracker stats unavailable: TRACKER_API_KEY missing in backend .env.',
-      trackerAuthFailed: 'Tracker stats unavailable: invalid Tracker API key.',
-      trackerRateLimited: 'Tracker stats unavailable: Tracker rate limited.',
-      trackerProfileNotFound: 'Tracker stats unavailable: profile not found.',
-      trackerUnavailable: 'Tracker stats unavailable: Tracker service error.'
-    };
-    return map[trackerReason] || 'Tracker stats unavailable.';
-  })();
 
   const peakAct = formatActLabel(playerStats?.yoink?.peakActEpisode);
   const hasValue = (value) => value !== null && value !== undefined && value !== '' && value !== 'N/A';
@@ -234,9 +216,9 @@ function PlayerCard({ player, selectedWeapons = [] }) {
   };
 
   return (
-    <div className={`player-row ${showSkins ? 'expanded' : ''}`}>
+    <div className={`player-row team-${teamColor} ${showSkins ? 'expanded' : ''}`}>
       <div className="pr-main">
-        <AgentAvatar characterId={player.characterId} agentName={player.agentName} size={34} />
+        <AgentAvatar characterId={player.characterId} agentName={player.agentName} size={36} />
 
         <div className="pr-identity">
           <div className="player-name-row">
@@ -254,7 +236,6 @@ function PlayerCard({ player, selectedWeapons = [] }) {
             {player.nameHidden && !isHidden && (
               <span className="hidden-tag" title="Streamer mode is on. Name revealed by lookup.">hidden</span>
             )}
-            <SeenTag player={player} />
           </div>
           <div className="player-meta">
             <span className="player-agent">{player.agentName || 'Unknown agent'}</span>
@@ -262,14 +243,10 @@ function PlayerCard({ player, selectedWeapons = [] }) {
             {vtlLink && (
               <a href={vtlLink} target="_blank" rel="noopener noreferrer" className="vtl-link" title="Open on vtl.lol">VTL ↗</a>
             )}
+            {featuredWeaponSkins.map(({ weapon, skin }) => (
+              <span key={weapon} className="pr-skin" title={`${weapon}: ${skin?.skinName || 'Standard'}`}>{skin?.skinName || 'Standard'} {weapon}</span>
+            ))}
           </div>
-          {featuredWeaponSkins.length > 0 && (
-            <div className="pr-skins">
-              {featuredWeaponSkins.map(({ weapon, skin }) => (
-                <span key={weapon}><span className="pr-skin-weapon">{weapon}</span> {skin?.skinName || 'Standard'}</span>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="pr-rank">
@@ -297,6 +274,8 @@ function PlayerCard({ player, selectedWeapons = [] }) {
           {peakItem && peakAct && <span className="pr-peak-act">{peakAct.short}</span>}
         </span>
 
+        <span className="pr-seen"><SeenTag player={player} compact /></span>
+
         <button
           type="button"
           className={`pr-more ${showSkins ? 'open' : ''} ${note ? 'has-note' : ''}`}
@@ -309,7 +288,6 @@ function PlayerCard({ player, selectedWeapons = [] }) {
         </button>
       </div>
 
-      {trackerReasonLabel && <div className="tracker-warning">{trackerReasonLabel}</div>}
 
       {showSkins && (
         <div className="pr-panel">
