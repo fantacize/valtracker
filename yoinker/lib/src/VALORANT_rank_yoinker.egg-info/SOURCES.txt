@@ -1,7 +1,0 @@
-LICENSE
-README.md
-setup.py
-src/VALORANT_rank_yoinker.egg-info/PKG-INFO
-src/VALORANT_rank_yoinker.egg-info/SOURCES.txt
-src/VALORANT_rank_yoinker.egg-info/dependency_links.txt
-src/VALORANT_rank_yoinker.egg-info/top_level.txt

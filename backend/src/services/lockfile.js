@@ -7,14 +7,15 @@ const path = require('path');
  */
 class LockfileService {
   constructor() {
-    // Default lockfile path (Windows)
-    this.lockfilePath = path.join(
-      process.env.LOCALAPPDATA || 'C:\\Users\\' + process.env.USERNAME + '\\AppData\\Local',
-      'Riot Games',
-      'Riot Client',
-      'Config',
-      'lockfile'
-    );
+    const localAppData = process.env.LOCALAPPDATA
+      || `C:\\Users\\${process.env.USERNAME}\\AppData\\Local`;
+
+    // Try multiple known lockfile locations; Riot has shifted paths between updates.
+    this.lockfileCandidates = [
+      path.join(localAppData, 'Riot Games', 'Riot Client', 'Config', 'lockfile'),
+      path.join('C:\\Riot Games', 'VALORANT', 'live', 'lockfile')
+    ];
+    this.lockfilePath = this.lockfileCandidates[0];
     
     this.credentials = null;
     this.lastMtimeMs = null;
@@ -26,12 +27,22 @@ class LockfileService {
    */
   readLockfile(force = false) {
     try {
-      if (!fs.existsSync(this.lockfilePath)) {
-        console.log('Lockfile not found at:', this.lockfilePath);
+      const existing = this.lockfileCandidates
+        .filter((candidate) => fs.existsSync(candidate))
+        .map((candidate) => ({
+          candidate,
+          mtimeMs: fs.statSync(candidate).mtimeMs
+        }))
+        .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+      if (existing.length === 0) {
+        console.log('Lockfile not found at known paths:', this.lockfileCandidates.join(', '));
         this.credentials = null;
         this.lastMtimeMs = null;
         return null;
       }
+
+      this.lockfilePath = existing[0].candidate;
 
       const stat = fs.statSync(this.lockfilePath);
       if (!force && this.credentials && this.lastMtimeMs === stat.mtimeMs) {
@@ -105,10 +116,28 @@ class LockfileService {
   }
 
   /**
+   * Identify the current local-client session without exposing its credentials.
+   * Consumers can use this value only for equality checks so cached tokens from
+   * a previous Riot Client process are never reused after a restart.
+   */
+  getSessionId() {
+    const credentials = this.readLockfile();
+    if (!credentials) return null;
+
+    return [
+      this.lockfilePath,
+      credentials.pid,
+      credentials.port,
+      credentials.password,
+      credentials.protocol
+    ].join('|');
+  }
+
+  /**
    * Check if VALORANT is running by checking if lockfile exists
    */
   isValorantRunning() {
-    return fs.existsSync(this.lockfilePath);
+    return this.lockfileCandidates.some((candidate) => fs.existsSync(candidate));
   }
 
   /**

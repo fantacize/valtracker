@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const valorantService = require('../services/valorant');
+const henrikService = require('../services/henrik');
+const { resolvePlayerNames } = require('../services/playerNames');
 
 const resolveCurrentIdentity = async () => {
   const user = await valorantService.getCurrentUser();
@@ -8,7 +10,11 @@ const resolveCurrentIdentity = async () => {
     return { loggedIn: false, user: null, source: 'localclient' };
   }
 
-  const names = await valorantService.resolvePuuidsToNames([user.puuid]);
+  const names = await resolvePlayerNames({
+    puuids: [user.puuid],
+    riotLookup: (ids) => valorantService.resolvePuuidsToNames(ids),
+    fallbackLookup: (ids) => henrikService.getCachedNamesAndQueueMissing(ids, user.region || 'na')
+  });
   const me = names?.[user.puuid] || null;
 
   return {

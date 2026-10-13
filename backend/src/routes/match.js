@@ -4,7 +4,45 @@ const axios = require('axios');
 const valorantService = require('../services/valorant');
 const henrikService = require('../services/henrik');
 const cacheService = require('../services/cache');
-const lockfileService = require('../services/lockfile');
+const runtimeStateService = require('../services/runtimeState');
+const { resolvePlayerNames, namesFromYoinkStats, combineLookups } = require('../services/playerNames');
+const { applyActPerformance } = require('../services/playerStats');
+const { encounterSummaries } = require('../services/encounterHistory');
+
+const loadPlayerStats = async (puuids) => {
+  const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
+  try {
+    const [user, content] = await Promise.all([
+      valorantService.getCurrentUser().catch(() => null),
+      valorantService.getContentServiceData()
+    ]);
+    const seasonId = valorantService.getActiveActSeasonId(content);
+    const actByPuuid = henrikService.getCachedActPerformanceAndQueueMissing(puuids, user?.region || 'na', seasonId);
+    return applyActPerformance(yoinkStatsByPuuid, actByPuuid);
+  } catch (error) {
+    console.warn('Whole-act stats unavailable:', error.message);
+    return applyActPerformance(yoinkStatsByPuuid, {});
+  }
+};
+
+const lookupPlayerNames = async (puuids, yoinkStatsByPuuid = {}) => {
+  const user = await valorantService.getCurrentUser().catch(() => null);
+  return resolvePlayerNames({
+    puuids,
+    riotLookup: (ids) => valorantService.resolvePuuidsToNames(ids),
+    fallbackLookup: combineLookups([
+      async () => namesFromYoinkStats(yoinkStatsByPuuid),
+      (ids) => henrikService.getCachedNamesAndQueueMissing(ids, user?.region || 'na')
+    ])
+  });
+};
+
+const toNameFields = (nameData) => ({
+  name: nameData?.name ? `${nameData.name}#${nameData.tag}` : 'Hidden player',
+  gameName: nameData?.name || null,
+  tagLine: nameData?.tag || '',
+  nameHidden: Boolean(nameData?.hidden)
+});
 
 const agentNameByUuid = {
   'add6443a-41bd-e414-f6ad-e58d267f4e95': 'Jett',
@@ -20,6 +58,7 @@ const agentNameByUuid = {
   'eb93336a-449b-9c1b-0a54-a891f7921d69': 'Phoenix',
   '569fdd95-4d10-43ab-ca70-79becc718b46': 'Sage',
   '9e3e74a2-4a27-5c22-9f51-d54f6a76e52c': 'Chamber',
+  '22697a3d-45bf-8dd7-4fec-84a9e28c69d7': 'Chamber',
   '707eab51-4836-f488-046a-cda6bf494859': 'Viper',
   '320b2a48-4d9b-a075-30f1-1f93a9b638fa': 'Sova',
   '6f2a04ca-43e0-be17-7f36-b3908627744d': 'Skye',
@@ -30,6 +69,12 @@ const agentNameByUuid = {
   'bb2a4828-46eb-8cd1-e765-15848195d751': 'Neon',
   '1e58de9c-4950-5125-93e9-a0aee9f98746': 'Killjoy',
   '0e38b510-4e61-1f13-272a-a5a5f7f3d780': 'Iso',
+  '0e38b510-41a8-5780-5e8f-568b2a4f2d6c': 'Iso',
+  'b444168c-4e35-8076-db47-ef9bf368f384': 'Tejo',
+  'efba5359-4016-a1e5-7626-b1ae76895940': 'Vyse',
+  'df1cb487-4902-002e-5c17-d28e83e78588': 'Waylay',
+  '7c8a4701-4de6-9355-b254-e09bc2a34b72': 'Miks',
+  '92eeef5d-43b5-1d4a-8d03-b3927a09034b': 'Veto',
   '1dbf2edd-4729-0984-3115-daa5eed44993': 'Clove'
 };
 
@@ -226,9 +271,17 @@ const computeSeasonKdFromHenrikMatches = (matches, puuid, seasonTokens = new Set
  * Check if VALORANT is running
  */
 router.get('/status', (req, res) => {
-  const isRunning = lockfileService.isValorantRunning();
+  const runtime = runtimeStateService.getSnapshot();
   res.json({ 
-    valorantRunning: isRunning,
+    // A Riot lockfile only proves Riot Client is open. The VALORANT-specific
+    // presence disappears on game exit and is recreated on every launch.
+    valorantRunning: runtime.connected,
+    runtime: {
+      initialized: runtime.initialized,
+      connected: runtime.connected,
+      sessionLoopState: runtime.sessionLoopState,
+      updatedAt: runtime.updatedAt
+    },
     timestamp: Date.now()
   });
 });
@@ -327,6 +380,15 @@ router.get('/queue/modes', async (req, res) => {
 router.get('/pregame/current', async (req, res) => {
   try {
     await hydrateAgentNameMap();
+    const runtime = runtimeStateService.getSnapshot();
+    if (runtime.connected && runtime.sessionLoopState === 'MENUS') {
+      return res.json({
+        inPregame: false,
+        state: 'MENUS',
+        message: 'Not in pregame currently'
+      });
+    }
+
     const pregameInfo = await valorantService.getCurrentPregame();
     if (!pregameInfo || !pregameInfo.inPregame) {
       return res.json({
@@ -348,8 +410,9 @@ router.get('/pregame/current', async (req, res) => {
     const enemyPlayers = Array.isArray(matchData?.EnemyTeam?.Players) ? matchData.EnemyTeam.Players : [];
     const allPlayers = [...allyPlayers, ...enemyPlayers];
     const puuids = allPlayers.map((p) => p.Subject).filter(Boolean);
-    const names = await valorantService.resolvePuuidsToNames(puuids);
-    const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
+    const yoinkStatsByPuuid = await loadPlayerStats(puuids);
+    const names = await lookupPlayerNames(puuids, yoinkStatsByPuuid);
+    const encountersByPuuid = await encounterSummaries(puuids);
 
     const normalizePregamePlayer = (player, defaultTeamId = null) => {
       const teamId = player?.TeamID || defaultTeamId || null;
@@ -357,9 +420,8 @@ router.get('/pregame/current', async (req, res) => {
 
       return {
         puuid: player.Subject,
-        name: nameData ? `${nameData.name}#${nameData.tag}` : 'Unknown Player',
-        gameName: nameData?.name || 'Unknown',
-        tagLine: nameData?.tag || '',
+        ...toNameFields(nameData),
+        encounters: encountersByPuuid[player.Subject] || null,
         teamId,
         characterId: player?.CharacterID || null,
         agentName: getAgentName(player?.CharacterID || null),
@@ -428,6 +490,22 @@ router.post('/queue/join', async (req, res) => {
 router.get('/current', async (req, res) => {
   try {
     await hydrateAgentNameMap();
+    const runtime = runtimeStateService.getSnapshot();
+    if (runtime.connected && runtime.sessionLoopState === 'MENUS') {
+      return res.json({
+        inGame: false,
+        state: 'MENUS',
+        message: 'Not in a match currently'
+      });
+    }
+    if (runtime.connected && runtime.sessionLoopState === 'PREGAME') {
+      return res.json({
+        inGame: false,
+        state: 'PREGAME',
+        message: 'Pregame active'
+      });
+    }
+
     // Check cache first (short TTL since match data changes)
     const cacheKey = 'currentMatch';
     const cached = cacheService.get(cacheKey);
@@ -461,11 +539,9 @@ router.get('/current', async (req, res) => {
     // Get player names using Riot name-service (yoink approach)
     const puuids = players.map(p => p.Subject);
     const user = await valorantService.getCurrentUser();
-    let playerNames = await valorantService.resolvePuuidsToNames(puuids);
-    if (Object.keys(playerNames).length === 0) {
-      playerNames = await henrikService.resolvePuuids(puuids, user.region || 'na');
-    }
-    const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
+    const yoinkStatsByPuuid = await loadPlayerStats(puuids);
+    const playerNames = await lookupPlayerNames(puuids, yoinkStatsByPuuid);
+    const encountersByPuuid = await encounterSummaries(puuids);
 
     // Henrik v4 match has party_id for each player, which we use to tag parties.
     let partyIdByPuuid = {};
@@ -522,9 +598,8 @@ router.get('/current', async (req, res) => {
       
       return {
         puuid: player.Subject,
-        name: nameData ? `${nameData.name}#${nameData.tag}` : 'Unknown Player',
-        gameName: nameData?.name || 'Unknown',
-        tagLine: nameData?.tag || '',
+        ...toNameFields(nameData),
+        encounters: encountersByPuuid[player.Subject] || null,
         teamId: player.TeamID,
         characterId: player.CharacterID,
         agentName: getAgentName(player.CharacterID),
@@ -628,7 +703,7 @@ router.get('/scoreboard/current', async (req, res) => {
       const puuids = allPlayers
         .map((p) => p?.puuid || p?.subject || null)
         .filter(Boolean);
-      const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
+      const yoinkStatsByPuuid = await loadPlayerStats(puuids);
       const metadata = liveMatch?.metadata || {};
       const seasonTokens = new Set();
       const seasonRawValues = [
@@ -931,11 +1006,9 @@ router.get('/scoreboard/current', async (req, res) => {
     const scoreboardPlayers = scoreboard.Players || [];
     const puuids = scoreboardPlayers.map((p) => p.Subject);
     const user = await valorantService.getCurrentUser();
-    let playerNames = await valorantService.resolvePuuidsToNames(puuids);
-    if (Object.keys(playerNames).length === 0) {
-      playerNames = await henrikService.resolvePuuids(puuids, user.region || 'na');
-    }
-    const yoinkStatsByPuuid = await valorantService.getYoinkStatsForPlayers(puuids);
+    const yoinkStatsByPuuid = await loadPlayerStats(puuids);
+    const playerNames = await lookupPlayerNames(puuids, yoinkStatsByPuuid);
+    const encountersByPuuid = await encounterSummaries(puuids);
     const loadoutByPuuid = {};
     for (const p of enrichedLoadoutPlayers) {
       loadoutByPuuid[p.Subject] = p.loadout || null;
@@ -952,9 +1025,8 @@ router.get('/scoreboard/current', async (req, res) => {
 
       return {
         puuid: player.Subject,
-        name: nameData ? `${nameData.name}#${nameData.tag}` : 'Unknown Player',
-        gameName: nameData?.name || 'Unknown',
-        tagLine: nameData?.tag || '',
+        ...toNameFields(nameData),
+        encounters: encountersByPuuid[player.Subject] || null,
         teamId: player.TeamID,
         characterId: player.CharacterID,
         agentName: getAgentName(player.CharacterID),

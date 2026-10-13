@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { getTrackerApiKey } = require('../config');
 
 /**
  * Tracker.gg API Service
@@ -7,7 +8,7 @@ const axios = require('axios');
 class TrackerService {
   constructor() {
     this.baseUrl = 'https://api.tracker.gg/api/v2/valorant';
-    this.apiKey = process.env.TRACKERAPIKEY || process.env.trackerapikey || '';
+    this.apiKey = getTrackerApiKey();
   }
 
   /**

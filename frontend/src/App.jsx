@@ -2,9 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import MatchOverview from './components/MatchOverview';
 import PregameLobby from './components/PregameLobby';
 import LiveTracker from './components/LiveTracker';
+import AccountHub from './components/AccountHub';
+import WeaponMenu from './components/WeaponMenu';
 import './App.css';
 
-const apiUrl = 'http://localhost:3000';
+const isBrowser = typeof window !== 'undefined';
+const isViteDevPort = isBrowser && (window.location.port === '5173' || window.location.port === '5174');
+const apiUrl = isViteDevPort ? 'http://localhost:3000' : (isBrowser ? window.location.origin : 'http://localhost:3000');
 const weaponFilterOptions = [
   'Classic',
   'Shorty',
@@ -26,6 +30,30 @@ const weaponFilterOptions = [
   'Odin',
   'Melee'
 ];
+
+const navItems = [
+  { id: 'tracker', label: 'Lobby', icon: 'grid' },
+  { id: 'live-game', label: 'Live match', icon: 'pulse' },
+  { id: 'account', label: 'Account', icon: 'bag' },
+  { id: 'live-demo', label: 'Demo', icon: 'flask' }
+];
+
+function Icon({ name, size = 18 }) {
+  const paths = {
+    grid: <><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></>,
+    pulse: <path d="M3 12h4l2.2-6 4.2 12 2.2-6H21"/>,
+    flask: <><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M8 15h8"/></>,
+    refresh: <><path d="M20 6v5h-5"/><path d="M19 11a7 7 0 1 0 1 5"/></>,
+    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
+    bag: <><path d="M5 8h14l-1 13H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></>
+  };
+
+  return (
+    <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[name] || paths.grid}
+    </svg>
+  );
+}
 
 function App() {
   const [matchData, setMatchData] = useState(null);
@@ -337,191 +365,153 @@ function App() {
     prevInQueueRef.current = queueState.inQueue;
   }, [queueState.inQueue, queueState.queueStartedAt, status.valorantRunning, queueTimerStartedAt]);
 
-  const modeLabel = matchData?.inGame ? getModeName(matchData.mode) : 'Not in match';
+  const modeLabel = matchData?.inGame
+    ? getModeName(matchData.mode)
+    : pregameData?.inPregame ? 'Agent select' : 'Not in match';
   const queueElapsedSeconds = queueState.inQueue && queueTimerStartedAt
     ? Math.max(0, Math.floor((nowTs - queueTimerStartedAt) / 1000))
     : 0;
   const queueElapsedLabel = `${String(Math.floor(queueElapsedSeconds / 60)).padStart(2, '0')}:${String(queueElapsedSeconds % 60).padStart(2, '0')}`;
+  const activeView = navItems.find((item) => item.id === activeTab) || navItems[0];
+  const accountName = !authStatus.loggedIn
+    ? 'Connect'
+    : authStatus?.user?.gameName
+      ? `${authStatus.user.gameName}#${authStatus.user.tagLine || ''}`
+      : 'Connected';
 
   return (
-    <div className="app">
-      <header className="header">
-        <div className="header-title">
-          <h1>VALORANT Skin Tracker</h1>
-          <div className="tab-switch">
-            <button
-              type="button"
-              className={`tab-btn ${activeTab === 'tracker' ? 'active' : ''}`}
-              onClick={() => setActiveTab('tracker')}
-            >
-              Tracker
-            </button>
-            <button
-              type="button"
-              className={`tab-btn ${activeTab === 'live-game' ? 'active' : ''}`}
-              onClick={() => setActiveTab('live-game')}
-            >
-              Live Game
-            </button>
-            <button
-              type="button"
-              className={`tab-btn ${activeTab === 'live-demo' ? 'active' : ''}`}
-              onClick={() => setActiveTab('live-demo')}
-            >
-              Live Demo
-            </button>
-          </div>
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand-block">
+          <span className="brand-mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7" /><path d="M12 2v5M12 17v5M2 12h5M17 12h5" /></svg></span>
+          <strong>Tracker</strong>
         </div>
-        <div className="header-controls">
-          <div className="status-indicator">
-            <span className={`status-dot ${status.valorantRunning ? 'online' : 'offline'}`}></span>
-            <span>VALORANT: {status.valorantRunning ? 'Running' : 'Not Running'}</span>
-          </div>
-          <div className="status-indicator">
-            <span className={`status-dot ${authStatus.loggedIn ? 'online' : 'offline'}`}></span>
-            <span>
-              Login: {authStatus.loggedIn
-                ? `${authStatus?.user?.gameName || 'Unknown'}#${authStatus?.user?.tagLine || ''}`
-                : 'Not Connected'}
+
+        <nav className="primary-nav" aria-label="Primary navigation">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+              aria-current={activeTab === item.id ? 'page' : undefined}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <Icon name={item.icon} size={16} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <span className={`status-dot ${status.valorantRunning ? 'online' : ''}`} />
+          <span>{status.valorantRunning ? 'VALORANT running' : 'VALORANT not running'}</span>
+        </div>
+      </aside>
+
+      <div className="workspace">
+        <header className="topbar">
+          <div className="page-heading">
+            <h1>{activeView.label}</h1>
+            <span className={`session-pill ${queueState.inQueue ? 'searching' : ''}`}>
+              <span className="session-dot" />
+              {queueState.inQueue
+                ? `Searching ${getQueueLabel(queueState.currentQueueId || selectedQueueId)} · ${queueElapsedLabel}`
+                : modeLabel}
             </span>
           </div>
-          {status.valorantRunning && (
-            <>
-              <div className="queue-indicator">
-                <span className="queue-dot online"></span>
-                <span>Game Mode: {modeLabel}</span>
-              </div>
-              {queueState.inQueue && (
-                <div className="queue-indicator">
-                  <span className="queue-dot pending"></span>
-                  <span>
-                    Queueing {getQueueLabel(queueState.currentQueueId || selectedQueueId)} | {queueElapsedLabel}
-                  </span>
-                </div>
-              )}
-              <div className="queue-controls">
-                <select
-                  className="queue-select"
-                  value={selectedQueueId}
-                  onChange={(e) => setSelectedQueueId(e.target.value)}
-                  disabled={queueActionLoading || queueModes.length === 0}
-                >
-                  {queueModes.length === 0 ? (
-                    <option value="">No queue modes available</option>
-                  ) : (
-                    queueModes.map((mode) => (
-                      <option key={mode.queueId} value={mode.queueId}>
-                        {getQueueLabel(mode.queueId)}
-                      </option>
-                    ))
-                  )}
-                </select>
-                <button
-                  onClick={joinQueue}
-                  className="refresh-btn"
-                  disabled={queueActionLoading || !selectedQueueId}
-                  type="button"
-                >
-                  {queueActionLoading ? 'Queueing...' : 'Queue'}
-                </button>
-              </div>
-            </>
-          )}
-          <label className="auto-refresh">
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-            />
-            Auto-refresh
-          </label>
-          {!pregameData?.inPregame && (
-            <button onClick={handleRefresh} className="refresh-btn">
-              Refresh
-            </button>
-          )}
-          <button onClick={loginLocal} className="refresh-btn" disabled={authLoading} type="button">
-            {authLoading ? 'Connecting...' : 'Login (Local)'}
-          </button>
-          <div className="weapon-filters">
-            {weaponFilterOptions.map((weapon) => (
-              <button
-                key={weapon}
-                type="button"
-                className={`weapon-chip ${selectedWeapons.includes(weapon) ? 'active' : ''}`}
-                onClick={() => toggleWeaponFilter(weapon)}
+
+          <div className="topbar-actions">
+            {activeTab !== 'account' && (
+              <WeaponMenu options={weaponFilterOptions} selected={selectedWeapons} onToggle={toggleWeaponFilter} />
+            )}
+
+            <div className="queue-group">
+              <select
+                className="queue-select"
+                aria-label="Queue mode"
+                value={selectedQueueId}
+                onChange={(e) => setSelectedQueueId(e.target.value)}
+                disabled={!status.valorantRunning || queueActionLoading || queueModes.length === 0}
               >
-                {weapon}
+                {queueModes.length === 0 ? (
+                  <option value="">No modes</option>
+                ) : queueModes.map((mode) => (
+                  <option key={mode.queueId} value={mode.queueId}>{getQueueLabel(mode.queueId)}</option>
+                ))}
+              </select>
+              <button className="btn btn-primary" onClick={joinQueue} disabled={!status.valorantRunning || queueActionLoading || !selectedQueueId} type="button">
+                {queueActionLoading ? 'Starting…' : 'Queue'}
               </button>
-            ))}
+            </div>
+
+            <span className="topbar-divider" />
+
+            <button
+              type="button"
+              className={`icon-button ${autoRefresh ? 'active' : ''}`}
+              onClick={() => setAutoRefresh((value) => !value)}
+              aria-pressed={autoRefresh}
+              title={autoRefresh ? 'Auto-refresh on' : 'Auto-refresh off'}
+              aria-label="Auto-refresh"
+            >
+              <Icon name="pulse" size={16} />
+            </button>
+            {!pregameData?.inPregame && activeTab !== 'account' && (
+              <button className="icon-button" type="button" onClick={handleRefresh} title="Refresh now" aria-label="Refresh now">
+                <Icon name="refresh" size={16} />
+              </button>
+            )}
+            <button className={`account-button ${authStatus.loggedIn ? 'connected' : ''}`} onClick={loginLocal} disabled={authLoading} type="button" title={authStatus.loggedIn ? 'Reconnect account' : 'Connect account'}>
+              <span className="account-initial">{authStatus?.user?.gameName ? authStatus.user.gameName.slice(0, 1).toUpperCase() : <Icon name="user" size={13} />}</span>
+              <span className="account-name">{authLoading ? 'Connecting…' : accountName}</span>
+            </button>
           </div>
-        </div>
-      </header>
-      {status.valorantRunning && queueActionMessage && (
-        <div className="queue-action-banner">
-          {queueActionMessage}
-        </div>
-      )}
-      {authMessage && (
-        <div className="queue-action-banner">
-          {authMessage}
-        </div>
-      )}
+        </header>
 
-      <main className="main-content">
-        {activeTab === 'live-demo' ? (
-          <LiveTracker demoMode selectedWeapons={selectedWeapons} />
-        ) : activeTab === 'live-game' ? (
-          <LiveTracker demoMode={false} selectedWeapons={selectedWeapons} />
-        ) : (
-          <>
-            {!status.valorantRunning && (
-              <div className="message-box warning">
-                <h2>VALORANT Not Running</h2>
-                <p>Please launch VALORANT to use the tracker.</p>
-              </div>
-            )}
+        {(queueActionMessage || authMessage) && (
+          <div className="notification-stack" role="status">
+            {queueActionMessage && <div className="toast-message">{queueActionMessage}</div>}
+            {authMessage && <div className="toast-message">{authMessage}</div>}
+          </div>
+        )}
 
-            {status.valorantRunning && loading && !matchData && (
-              <div className="message-box">
-                <div className="loader"></div>
-                <p>Loading match data...</p>
-              </div>
-            )}
-
-            {status.valorantRunning && !loading && !matchData && !error && (
+        <main className="main-content">
+          <div className="content-stage">
+            {activeTab === 'account' ? (
+              <AccountHub apiUrl={apiUrl} enabled={authStatus.loggedIn} />
+            ) : activeTab === 'live-demo' ? (
+              <LiveTracker demoMode selectedWeapons={selectedWeapons} />
+            ) : activeTab === 'live-game' ? (
+              <LiveTracker demoMode={false} selectedWeapons={selectedWeapons} />
+            ) : (
               <>
-                {pregameData?.inPregame ? (
-                  <PregameLobby data={pregameData} />
-                ) : (
-                  <div className="message-box info">
-                    <h2>Not in a Match</h2>
-                    <p>Join a match to see player skins and stats!</p>
+                {!status.valorantRunning && (
+                  <div className="empty-state">
+                    <h2>VALORANT isn't running</h2>
+                    <p>Open the Riot Client, launch VALORANT and sign in. The tracker connects automatically.</p>
                   </div>
                 )}
+
+                {status.valorantRunning && loading && !matchData && (
+                  <div className="empty-state"><div className="loader" /><p>Loading match…</p></div>
+                )}
+
+                {status.valorantRunning && !loading && !matchData && !error && (
+                  pregameData?.inPregame ? <PregameLobby data={pregameData} /> : (
+                    <div className="empty-state">
+                      <h2>No active match</h2>
+                      <p>Players show up here once you reach agent select.</p>
+                    </div>
+                  )
+                )}
+
+                {error && <div className="empty-state error"><h2>Couldn't reach the tracker</h2><p>{error}</p></div>}
+                {matchData && matchData.inGame && <MatchOverview matchData={matchData} selectedWeapons={selectedWeapons} />}
               </>
             )}
-
-            {error && (
-              <div className="message-box error">
-                <h2>Error</h2>
-                <p>{error}</p>
-              </div>
-            )}
-
-            {matchData && matchData.inGame && (
-              <MatchOverview matchData={matchData} selectedWeapons={selectedWeapons} />
-            )}
-          </>
-        )}
-      </main>
-
-      <footer className="footer">
-        <p>Made with love for the VALORANT community</p>
-        <p className="footer-note">
-          Uses Henrik API, Tracker.gg, and Valorant-API.com
-        </p>
-      </footer>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

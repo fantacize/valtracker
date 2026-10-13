@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import './LiveTracker.css';
+import AgentAvatar from './AgentAvatar';
 
-const apiUrl = 'http://localhost:3000';
+const isBrowser = typeof window !== 'undefined';
+const isViteDevPort = isBrowser && (window.location.port === '5173' || window.location.port === '5174');
+const apiUrl = isViteDevPort ? 'http://localhost:3000' : (isBrowser ? window.location.origin : 'http://localhost:3000');
 
 const createDemoPlayer = (id, agent, name, teamId, utilRate, demoWeapons = {}) => ({
   id,
@@ -125,7 +128,7 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
   const [liveData, setLiveData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   const [demoState, setDemoState] = useState(() => createDemoState());
 
   const fetchLiveData = async () => {
@@ -275,28 +278,23 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
   return (
     <div className="live-scoreboard">
       <div className="live-scoreboard-header">
-        <div>
-          <h2>Live Tracker {demoMode ? '(Demo)' : ''}</h2>
-          <p>
+        <div className="live-title-block">
+          <h2>{demoMode ? demoState.map : (liveData?.map || 'Waiting for match')}</h2>
+          <p className="live-location">
             {demoMode
-              ? `${demoState.map} - ${demoState.mode}`
+              ? `${demoState.mode} · Demo data`
               : liveData
-                ? `${liveData.map} - ${liveData.mode} (${liveData.source || 'local'})`
-                : 'Waiting for match data'}
+                ? `${liveData.mode} · via ${liveData.source || 'local'}`
+                : 'Scoreboard appears once a round starts'}
           </p>
-          {demoMode ? (
-            <p className="live-meta">
-              Round {demoState.round} | Match Time {formatElapsed(demoState.elapsedMs)}
-            </p>
-          ) : liveData?.inGame ? (
-            <p className="live-meta">
-              Round {liveData.round ?? '-'} | Match Time {formatElapsed(liveData.matchDurationMs ?? 0)}
-            </p>
-          ) : null}
         </div>
+        <dl className="live-match-facts">
+          <div><dt>Round</dt><dd>{demoMode ? demoState.round : (liveData?.round ?? '—')}</dd></div>
+          <div><dt>Time</dt><dd>{formatElapsed(demoMode ? demoState.elapsedMs : (liveData?.matchDurationMs ?? 0))}</dd></div>
+        </dl>
         <div className="live-scoreboard-actions">
           <button
-            className="live-btn"
+            className="btn"
             onClick={() => {
               if (demoMode) {
                 setDemoState((prev) => simulateDemoRound(prev));
@@ -306,9 +304,8 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
             }}
             type="button"
           >
-            {demoMode ? 'Simulate Round' : 'Refresh'}
+            {demoMode ? 'Simulate round' : 'Refresh'}
           </button>
-          <span className="live-tick">Update #{tick}</span>
         </div>
       </div>
 
@@ -327,20 +324,20 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
       {teams.length > 0 && (
         <div className="scoreboard-table">
           <div className="scoreboard-row scoreboard-head">
-            <span>Agent</span>
-            <span>KD</span>
-            <span>Side KD</span>
+            <span>Player</span>
+            <span>K/D</span>
+            <span>Side K/D</span>
             <span>Score</span>
             <span>FK</span>
             <span>FD</span>
-            <span>C / Q / E / X</span>
+            <span>C/Q/E/X</span>
             <span>Weapons</span>
           </div>
 
           {teams.map((team) => (
             <div key={team.name} className={`scoreboard-team ${team.color}`}>
               <div className={`scoreboard-row team-banner ${team.color}`}>
-                <span>{team.name}</span>
+                <span><i></i>{team.name}</span>
                 <span></span>
                 <span></span>
                 <span></span>
@@ -353,7 +350,7 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
                   return (
                     <div key={player.id || `${team.name}-${idx}`} className="scoreboard-row">
                       <span className="agent-cell">
-                        <span className="agent-tag">{player.agent}</span>
+                        <AgentAvatar characterId={player.characterId} agentName={player.agent} size={28} />
                         <span className="agent-name">{player.name}</span>
                       </span>
                       <span>{getDisplayedKd(player)}</span>
@@ -372,8 +369,9 @@ function LiveTracker({ demoMode, selectedWeapons = [] }) {
                 return (
                   <div key={player.puuid} className="scoreboard-row">
                     <span className="agent-cell">
-                      <span className="agent-tag">{player.agentName || 'Agent'}</span>
-                      <span className="agent-name">{player.gameName}</span>
+                      <AgentAvatar characterId={player.characterId} agentName={player.agentName} size={28} />
+                      <span className="agent-name">{player.gameName ? `${player.gameName}#${player.tagLine}` : 'Hidden player'}</span>
+                      {player.nameHidden && player.gameName && <span className="hidden-tag" title="Streamer mode is on. Name revealed by lookup.">hidden</span>}
                     </span>
                     <span>{getDisplayedKd(player)}</span>
                     <span>{formatSideKd(player)}</span>

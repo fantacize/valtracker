@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import './PlayerCard.css';
+import { getRrDisplay } from '../lib/rrStyle';
+import SeenTag from './SeenTag';
+import { formatActLabel } from '../lib/actLabel';
+import { statTone } from '../lib/statTone';
+import AgentAvatar from './AgentAvatar';
 
 function PlayerCard({ player, selectedWeapons = [] }) {
   const buildYoinkFallback = () => {
@@ -19,6 +24,8 @@ function PlayerCard({ player, selectedWeapons = [] }) {
       },
       yoink: {
         games: player.yoinkStats.games ?? 0,
+        statMatches: player.yoinkStats.statMatches ?? 0,
+        statScope: player.yoinkStats.statScope || 'recent',
         deltaRrLabel: player.yoinkStats.deltaRrLabel || null,
         rrHistory: Array.isArray(player.yoinkStats.rrHistory) ? player.yoinkStats.rrHistory : [],
         peakActEpisode: player.yoinkStats.peakActEpisode || null
@@ -37,11 +44,9 @@ function PlayerCard({ player, selectedWeapons = [] }) {
   const [skinRarityFilter, setSkinRarityFilter] = useState('All');
   const [note, setNote] = useState('');
   const [noteStatus, setNoteStatus] = useState('idle');
-  const [showNotes, setShowNotes] = useState(false);
 
-  // Check if player name is hidden
   const isDemo = player.isDemo;
-  const isHidden = !player.gameName || player.gameName === 'Unknown' || player.gameName.includes('Player');
+  const isHidden = !player.gameName;
 
   useEffect(() => {
     // Always reflect latest yoink payload from parent poll.
@@ -91,34 +96,15 @@ function PlayerCard({ player, selectedWeapons = [] }) {
     .map((weapon) => ({ weapon, skin: player.loadout?.weapons?.[weapon] || null }))
     .filter((entry) => entry.skin);
 
-  // Generate vtl.lol link
   const getVtlLink = () => {
-    if (!isHidden && player?.gameName && player?.tagLine) {
-      // Format: username with spaces as +, then _tagline
-      const username = player.gameName.replace(/ /g, '+');
-      return `https://vtl.lol/id/${username}_${player.tagLine}`;
-    }
-    if (player?.puuid) {
-      // Hidden fallback: keep a direct identifier link available.
-      return `https://vtl.lol/id/${player.puuid}`;
-    }
+    if (player?.puuid) return `https://vtl.lol/id/${player.puuid}`;
+    if (player?.gameName && player?.tagLine) return `https://vtl.lol/id/${player.gameName.replace(/ /g, '+')}_${player.tagLine}`;
     return null;
   };
 
   const getTrackerLink = () => {
-    let gameName = player?.gameName || '';
-    let tagLine = player?.tagLine || '';
-
-    if ((!gameName || !tagLine) && typeof player?.name === 'string') {
-      const nameParts = player.name.split('#');
-      if (nameParts.length >= 2) {
-        gameName = gameName || nameParts.slice(0, -1).join('#');
-        tagLine = tagLine || nameParts[nameParts.length - 1];
-      }
-    }
-
-    if (!gameName || !tagLine) return null;
-    const riotId = `${gameName}#${tagLine}`;
+    if (!player?.gameName || !player?.tagLine) return null;
+    const riotId = `${player.gameName}#${player.tagLine}`;
     return `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(riotId)}/overview`;
   };
 
@@ -208,7 +194,7 @@ function PlayerCard({ player, selectedWeapons = [] }) {
     ) return null;
     const map = {
       usingYoinkOnly: 'Using yoink source only (Riot local APIs).',
-      trackerKeyMissing: 'Tracker stats unavailable: TRACKERAPIKEY missing in backend.',
+      trackerKeyMissing: 'Tracker stats unavailable: TRACKER_API_KEY missing in backend .env.',
       trackerAuthFailed: 'Tracker stats unavailable: invalid Tracker API key.',
       trackerRateLimited: 'Tracker stats unavailable: Tracker rate limited.',
       trackerProfileNotFound: 'Tracker stats unavailable: profile not found.',
@@ -217,256 +203,167 @@ function PlayerCard({ player, selectedWeapons = [] }) {
     return map[trackerReason] || 'Tracker stats unavailable.';
   })();
 
-  const peakActEpisodeLabel = (() => {
-    const peakMeta = playerStats?.yoink?.peakActEpisode;
-    if (!peakMeta) return null;
-    const ep = peakMeta.episodeNumber;
-    let act = peakMeta.actNumber;
-
-    if (!act && peakMeta.actName) {
-      const match = String(peakMeta.actName).match(/(\d+)/);
-      if (match) act = Number(match[1]);
-    }
-
-    if (ep && act) return `EP. ${ep} A${act}`;
-    if (act) return `A${act}`;
-    return peakMeta.actName || null;
-  })();
-  const vtlLink = getVtlLink();
+  const peakAct = formatActLabel(playerStats?.yoink?.peakActEpisode);
+  const hasValue = (value) => value !== null && value !== undefined && value !== '' && value !== 'N/A';
+  const statMatches = playerStats?.yoink?.statMatches || 0;
+  const recentLabel = !statMatches ? null : playerStats.yoink.statScope === 'act'
+    ? `This act · ${statMatches} games`
+    : `Last ${statMatches} games (whole act loading)`;
+  const statItems = playerStats?.stats ? [
+    { label: 'K/D', value: formatNumber(playerStats.stats.kd, 2), className: 'kd-stat', subvalue: recentLabel },
+    { label: 'HS%', value: formatNumber(playerStats.stats.headshotPct, 0, '%'), subvalue: recentLabel },
+    { label: 'Win rate', value: formatNumber(playerStats.stats.winRate, 0, '%'), subvalue: 'This act' },
+    {
+      label: 'Peak',
+      value: playerStats.rank?.peakRank && playerStats.rank.peakRank !== 'Unranked' ? playerStats.rank.peakRank : null,
+      valueClassName: `peak-rank ${getRankTextClass(playerStats.rank?.peakRank)}`,
+      subvalue: peakAct?.long
+    },
+    { label: 'Games', value: playerStats.yoink?.games || null },
+    { label: 'ΔRR', value: playerStats.yoink?.deltaRrLabel || null, subvalue: rrHistoryLabel }
+  ].filter((item) => hasValue(item.value)) : [];
   const trackerLink = getTrackerLink();
+  const vtlLink = getVtlLink();
+  const rrDisplay = playerStats?.rank?.rr >= 0 ? getRrDisplay({ tier: playerStats.rank.tier, rr: playerStats.rank.rr }) : null;
+
+  const statValue = (label) => statItems.find((item) => item.label === label) || null;
+  const peakItem = statValue('Peak');
+  const statCell = (label, tone, emphasis = 'secondary') => {
+    const item = statValue(label);
+    return <span className={`pr-stat ${emphasis} tone-${item ? tone : 'neutral'}`} title={item?.subvalue || undefined}>{item ? item.value : '—'}</span>;
+  };
 
   return (
-    <div className="player-card">
-      {player.partyBadge && (
-        <div
-          className="party-badge"
-          style={{
-            '--party-color': player.partyBadge.color
-          }}
-          title={`Party ${player.partyBadge.partyNumber}`}
-          aria-label={`Party ${player.partyBadge.partyNumber}`}
-        >
-          {player.partyBadge.label}
-        </div>
-      )}
-      <div className="player-header">
-        <div className="player-info">
-          <div className="player-name-row">
-            <h4 className="player-name">
-              {isHidden ? (
-                <span className="hidden-name">Hidden Profile</span>
-              ) : (
-                player.name
-              )}
-            </h4>
-            <div className="player-links">
-              {trackerLink && (
-                <a
-                  href={trackerLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="tracker-link"
-                >
-                  TRN
-                </a>
-              )}
-              {vtlLink && (
-                <a
-                  href={vtlLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="vtl-link"
-                >
-                  VTL
-                </a>
-              )}
-            </div>
-          </div>
-          <p className="player-level">
-            {player.accountLevel === null || player.accountLevel === undefined
-              ? 'Level Hidden'
-              : `Level ${player.accountLevel}`}
-          </p>
-          <p className="player-agent">{player.agentName || 'Unknown Agent'}</p>
-        </div>
-      </div>
-
-      {/* Main Stats Display - Show immediately */}
-      {playerStats && playerStats.stats && (
-        <div className="player-main-stats">
-          <div className={`stat-badge rank-badge ${getRankBadgeClass(playerStats.rank?.tier)}`}>
-            {/* Rank Icon */}
-            {getRankIcon(playerStats.rank?.tier) && (
-              <img 
-                src={getRankIcon(playerStats.rank?.tier)}
-                alt={playerStats.rank?.tier}
-                className="rank-icon"
-              />
-            )}
-            
-            <span className="stat-label">Rank</span>
-            <span className="stat-value-large">
-              {playerStats.rank?.tier || 'Unranked'}
+    <div className={`player-row ${showSkins ? 'expanded' : ''}`}>
+      <div className="pr-main">
+        <span className="pr-party">
+          {player.partyBadge && (
+            <span
+              className="party-badge"
+              style={{ '--party-color': player.partyBadge.color }}
+              title={`Party ${player.partyBadge.partyNumber}`}
+              aria-label={`Party ${player.partyBadge.partyNumber}`}
+            >
+              {player.partyBadge.label}
             </span>
-            
-            {/* RR Progress Bar or RR Number */}
-            {playerStats.rank?.rr >= 0 && (
-              <div className="rr-container">
-                {/* For Immortal and Radiant, just show the number */}
-                {(playerStats.rank?.tier === 'Radiant' || 
-                  playerStats.rank?.tier?.includes('Immortal')) ? (
-                  <div className="rr-number-only">
-                    {playerStats.rank.rr} RR
-                  </div>
-                ) : (
-                  /* For all other ranks, show standard 0-100 bar */
-                  <div className="rr-bar-wrapper">
-                    <div 
-                      className="rr-bar-fill" 
-                      style={{ width: `${playerStats.rank.rr}%` }}
-                    ></div>
-                    <span className="rr-text">{playerStats.rank.rr} / 100 RR</span>
-                  </div>
-                )}
-              </div>
+          )}
+        </span>
+
+        <AgentAvatar characterId={player.characterId} agentName={player.agentName} size={34} />
+
+        <div className="pr-identity">
+          <div className="player-name-row">
+            <span className="player-name">
+              {isHidden ? (
+                <span className="hidden-name">Hidden player</span>
+              ) : trackerLink ? (
+                <a href={trackerLink} target="_blank" rel="noopener noreferrer" title="Open on tracker.gg">
+                  {player.gameName}<span className="player-tag">#{player.tagLine}</span>
+                </a>
+              ) : (
+                <>{player.gameName}<span className="player-tag">#{player.tagLine}</span></>
+              )}
+            </span>
+            {player.nameHidden && !isHidden && (
+              <span className="hidden-tag" title="Streamer mode is on. Name revealed by lookup.">hidden</span>
+            )}
+            <SeenTag player={player} />
+          </div>
+          <div className="player-meta">
+            <span className="player-agent">{player.agentName || 'Unknown agent'}</span>
+            <span className="player-level">{player.accountLevel === null || player.accountLevel === undefined ? 'Lv ?' : `Lv ${player.accountLevel}`}</span>
+            {vtlLink && (
+              <a href={vtlLink} target="_blank" rel="noopener noreferrer" className="vtl-link" title="Open on vtl.lol">VTL ↗</a>
             )}
           </div>
-          
-          <div className="stats-grid">
-            <div className="stat-item stat-item-small kd-stat">
-              <span className="stat-label">K/D</span>
-              <span className="stat-value">{formatNumber(playerStats.stats.kd, 2)}</span>
-            </div>
-            <div className="stat-item stat-item-small">
-              <span className="stat-label">HS%</span>
-              <span className="stat-value">{formatNumber(playerStats.stats.headshotPct, 1, '%')}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Win Rate</span>
-              <span className="stat-value">{formatNumber(playerStats.stats.winRate, 1, '%')}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Peak</span>
-              <span className={`stat-value peak-rank ${getRankTextClass(playerStats.rank?.peakRank)}`}>
-                {playerStats.rank?.peakRank || 'N/A'}
-              </span>
-              <span className="stat-subvalue">{peakActEpisodeLabel || '-'}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Games</span>
-              <span className="stat-value">{playerStats.yoink?.games ?? 'N/A'}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">dRR</span>
-              <span className="stat-value">{playerStats.yoink?.deltaRrLabel || 'N/A'}</span>
-              <span className="stat-subvalue">{rrHistoryLabel || '-'}</span>
-            </div>
-          </div>
-          {trackerReasonLabel && (
-            <div className="tracker-warning">{trackerReasonLabel}</div>
-          )}
           {featuredWeaponSkins.length > 0 && (
-            <div className="featured-skins-row">
+            <div className="pr-skins">
               {featuredWeaponSkins.map(({ weapon, skin }) => (
-                <div key={weapon} className="featured-skin-item">
-                  <span className="featured-skin-weapon">{weapon}</span>
-                  <span className="featured-skin-name">{skin?.skinName || 'Standard'}</span>
-                </div>
+                <span key={weapon}><span className="pr-skin-weapon">{weapon}</span> {skin?.skinName || 'Standard'}</span>
               ))}
             </div>
           )}
         </div>
-      )}
 
-      {/* Show button to load stats if not loaded for hidden profiles */}
-      {isHidden && !playerStats && (
-        <div className="hidden-profile-notice">
-          <p>This profile is hidden</p>
-          <p className="notice-subtext">View match history to identify player</p>
-        </div>
-      )}
-
-      <div className="utility-row">
-        {/* Skins - Collapsible */}
-        {loadoutWeapons.length > 0 && (
-          <div className="skin-text-display utility-card">
-            <button
-              className={`skin-toggle ${showSkins ? 'open' : ''}`}
-              onClick={() => setShowSkins(!showSkins)}
-              type="button"
-            >
-              <span>Skins</span>
-              <span className="skin-toggle-meta">
-                {filteredWeapons.length}/{loadoutWeapons.length}
-                <span className="skin-toggle-caret">{showSkins ? '^' : 'V'}</span>
+        <div className="pr-rank">
+          {getRankIcon(playerStats?.rank?.tier) ? (
+            <img src={getRankIcon(playerStats.rank.tier)} alt="" className="rank-icon" />
+          ) : <span className="rank-icon" />}
+          <div className="pr-rank-text">
+            <span className={`pr-rank-tier ${getRankTextClass(playerStats?.rank?.tier)}`}>{playerStats?.rank?.tier || 'Unranked'}</span>
+            {rrDisplay && (rrDisplay.kind === 'number' ? (
+              <span className={`rr-number-only ${rrDisplay.tone}`}>{playerStats.rank.rr} RR</span>
+            ) : (
+              <span className="rr-bar-wrapper" title={`${playerStats.rank.rr} / 100 RR`}>
+                <span className="rr-bar-fill" style={{ width: `${rrDisplay.width}%`, background: rrDisplay.background }} />
+                <span className="rr-text" style={{ color: rrDisplay.color }}>{playerStats.rank.rr}</span>
               </span>
-            </button>
-
-            {showSkins && (
-              <>
-                <div className="skin-filters">
-                  <label className="skin-filter">
-                    <span>Rarity</span>
-                    <select
-                      value={skinRarityFilter}
-                      onChange={(e) => setSkinRarityFilter(e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {availableRarities.map((rarity) => (
-                        <option key={rarity} value={rarity}>
-                          {rarity}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                {filteredWeapons.length === 0 ? (
-                  <div className="skin-text-empty">No skins match the filters.</div>
-                ) : (
-                  filteredWeapons.map(([weapon, skin]) => (
-                    <div key={weapon} className="skin-text-item">
-                      <span className="skin-list-name">{skin.skinName}</span>
-                      <span className="skin-list-divider">-</span>
-                      <span className="skin-list-weapon">{weapon}</span>
-                      <span className="skin-list-rarity">{skin.rarity || 'Unknown'}</span>
-                    </div>
-                  ))
-                )}
-              </>
-            )}
+            ))}
           </div>
-        )}
-
-        <div className="player-notes utility-card">
-          <button
-            className={`notes-tab-toggle ${showNotes ? 'open' : ''}`}
-            type="button"
-            onClick={() => setShowNotes((prev) => !prev)}
-          >
-            <span>Player Notes</span>
-            <span className="notes-toggle-meta">{showNotes ? 'Hide' : 'Open'}</span>
-          </button>
-          {showNotes && (
-            <>
-              <div className="notes-header">
-                <span>Local Note</span>
-                <span className={`notes-status ${noteStatus}`}>{noteStatus === 'saved' ? 'Saved' : ''}</span>
-              </div>
-              <textarea
-                className="notes-textarea"
-                placeholder="Add a quick note (local only)..."
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
-              <button className="notes-save-btn" type="button" onClick={saveNote}>
-                Save Note
-              </button>
-            </>
-          )}
         </div>
+
+        {statCell('K/D', statTone('kd', playerStats?.stats?.kd), 'primary')}
+        {statCell('HS%', statTone('hs', playerStats?.stats?.headshotPct))}
+        {statCell('Win rate', statTone('winRate', playerStats?.stats?.winRate))}
+        <span className="pr-peak" title={peakItem?.subvalue || undefined}>
+          <span className={`pr-peak-tier ${peakItem?.valueClassName || ''}`}>{peakItem ? peakItem.value : '—'}</span>
+          {peakItem && peakAct && <span className="pr-peak-act">{peakAct.short}</span>}
+        </span>
+
+        <button
+          type="button"
+          className={`pr-more ${showSkins ? 'open' : ''} ${note ? 'has-note' : ''}`}
+          onClick={() => setShowSkins(!showSkins)}
+          aria-expanded={showSkins}
+          aria-label={showSkins ? 'Hide skins and notes' : 'Show skins and notes'}
+          title={note ? `Note: ${note}` : 'Skins and notes'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </button>
       </div>
 
+      {trackerReasonLabel && <div className="tracker-warning">{trackerReasonLabel}</div>}
+
+      {showSkins && (
+        <div className="pr-panel">
+          {loadoutWeapons.length > 0 && (
+            <>
+              <label className="skin-filter">
+                <span>Rarity</span>
+                <select value={skinRarityFilter} onChange={(e) => setSkinRarityFilter(e.target.value)}>
+                  <option value="All">All</option>
+                  {availableRarities.map((rarity) => (
+                    <option key={rarity} value={rarity}>{rarity}</option>
+                  ))}
+                </select>
+              </label>
+              {filteredWeapons.length === 0 ? (
+                <div className="skin-text-empty">No skins match the filters.</div>
+              ) : (
+                <div className="skin-list">
+                  {filteredWeapons.map(([weapon, skin]) => (
+                    <div key={weapon} className="skin-text-item">
+                      <span className="skin-list-weapon">{weapon}</span>
+                      <span className="skin-list-name">{skin.skinName}</span>
+                      <span className="skin-list-rarity">{skin.rarity || 'Unknown'}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+          <textarea
+            className="notes-textarea"
+            placeholder="Add a note… (saved on this PC)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <div className="notes-footer">
+            <span className={`notes-status ${noteStatus}`}>{noteStatus === 'saved' ? 'Saved' : ''}</span>
+            <button className="btn" type="button" onClick={saveNote}>Save note</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

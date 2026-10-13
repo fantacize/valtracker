@@ -6,12 +6,35 @@ const path = require('path');
 const matchRoutes = require('./routes/match');
 const playerRoutes = require('./routes/player');
 const authRoutes = require('./routes/auth');
+const accountRoutes = require('./routes/account');
+const runtimeStateService = require('./services/runtimeState');
+const cacheService = require('./services/cache');
+const valorantService = require('./services/valorant');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Local-only API. Browser development is allowed from the two Vite ports; the
+// packaged desktop UI is same-origin and does not need CORS.
+const allowedDevelopmentOrigins = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174'
+]);
+app.use((req, res, next) => {
+  const sameOrigin = `http://${req.get('host')}`;
+  return cors({
+    origin(origin, callback) {
+      if (!origin || origin === sameOrigin || allowedDevelopmentOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Origin not allowed'));
+    },
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type']
+  })(req, res, next);
+});
 app.use(express.json());
 
 // Request logging
@@ -24,16 +47,19 @@ app.use((req, res, next) => {
 app.use('/api/match', matchRoutes);
 app.use('/api/player', playerRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/account', accountRoutes);
 
 const resolveFrontendDistPath = () => {
-  // When packaged, serve files placed next to the exe.
+  // `pkg` stores the production frontend inside the executable snapshot.
   if (process.pkg) {
-    const nextToExe = path.join(path.dirname(process.execPath), 'frontend-dist');
-    if (fs.existsSync(nextToExe)) return nextToExe;
-    return null;
+    const embeddedDist = path.join(__dirname, '..', 'public');
+    return fs.existsSync(embeddedDist) ? embeddedDist : null;
   }
 
-  // During normal dev/runtime, serve from frontend build output.
+  const localPublic = path.resolve(__dirname, '..', 'public');
+  if (fs.existsSync(localPublic)) return localPublic;
+
+  // During development, fall back to Vite's build output.
   const localDist = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
   return fs.existsSync(localDist) ? localDist : null;
 };
@@ -71,6 +97,9 @@ app.get('/api', (req, res) => {
         status: 'GET /api/auth/status',
         localLogin: 'POST /api/auth/login/local'
       },
+      account: {
+        overview: 'GET /api/account/overview'
+      },
       player: {
         byName: 'GET /api/player/:name/:tag',
         byPuuid: 'GET /api/player/puuid/:puuid',
@@ -96,32 +125,51 @@ if (frontendDistPath) {
 
 // Error handling
 app.use((err, req, res, next) => {
+  if (err?.message === 'Origin not allowed') {
+    return res.status(403).json({ error: 'Origin not allowed' });
+  }
   console.error('Error:', err);
-  res.status(500).json({ 
+  return res.status(500).json({
     error: 'Internal server error',
     message: err.message 
   });
 });
 
+runtimeStateService.on('state-change', ({ previous, current }) => {
+  console.log(`Runtime state changed: ${previous || 'unknown'} -> ${current || 'unknown'}`);
+  cacheService.delete('currentMatch');
+  cacheService.delete('localQueueModes');
+});
+
+runtimeStateService.on('connection-change', ({ previous, current }) => {
+  console.log(
+    `VALORANT connection changed: ${previous.connected ? 'online' : 'offline'} -> ${current.connected ? 'online' : 'offline'}`
+  );
+  valorantService.resetSessionCache();
+  cacheService.clear();
+});
+
+runtimeStateService.start();
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`
-╔═══════════════════════════════════════════════════════╗
-║                                                       ║
-║   🎮 VALORANT Skin Tracker API                       ║
-║                                                       ║
-║   Server running on: http://localhost:${PORT}        ║
-║                                                       ║
-║   Endpoints:                                          ║
-║   - GET /api/match/current    (get match + skins)    ║
-║   - GET /api/player/:name/:tag (get player stats)    ║
-║                                                       ║
-╚═══════════════════════════════════════════════════════╝
-  `);
-  
-  console.log('✓ Server started successfully');
-  console.log('✓ CORS enabled');
-  console.log('✓ Waiting for requests...\n');
+const server = app.listen(PORT, '127.0.0.1', () => {
+  console.log('======================================');
+  console.log('VALORANT Skin Tracker API');
+  console.log(`Server running on: http://localhost:${PORT}`);
+  console.log('Endpoints:');
+  console.log('- GET /api/match/current');
+  console.log('- GET /api/player/:name/:tag');
+  console.log('======================================');
+});
+
+server.on('error', (error) => {
+  if (error && error.code === 'EADDRINUSE') {
+    console.log(`Port ${PORT} is already in use. Reusing existing backend instance.`);
+    process.exit(0);
+    return;
+  }
+  console.error('Server failed to start:', error);
+  process.exit(1);
 });
 
 module.exports = app;

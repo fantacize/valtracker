@@ -7,8 +7,14 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "build:frontend": "npm --prefix ../frontend install && npm --prefix ../frontend run build",
-    "build:exe": "npm run build:frontend && npx pkg . --targets node18-win-x64 --output ../release/ValorantTrackerBackend.exe && node -e \"const fs=require('fs');const path=require('path');const src=path.resolve('../frontend/dist');const dest=path.resolve('../release/frontend-dist');fs.rmSync(dest,{recursive:true,force:true});fs.mkdirSync(dest,{recursive:true});fs.cpSync(src,dest,{recursive:true});\""
+    "test": "node --test test/*.test.js",
+    "build:exe": "npx pkg . --targets node18-win-x64 --output ../release/staging/ValorantTrackerBackend.exe"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "src/services/*.csv"
+    ]
   },
   "keywords": ["valorant", "tracker", "api", "skins"],
   "author": "",

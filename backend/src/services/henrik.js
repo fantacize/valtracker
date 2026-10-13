@@ -1,4 +1,10 @@
 const axios = require('axios');
+const { getHenrikApiKey } = require('../config');
+const { aggregateActPerformance, isActComplete } = require('./playerStats');
+
+const ACT_PAGE_SIZE = 100;
+const MAX_ACT_PAGES = 5;
+const ACT_STATS_TTL_MS = 10 * 60 * 1000;
 
 /**
  * Henrik API Service
@@ -7,7 +13,11 @@ const axios = require('axios');
 class HenrikService {
   constructor() {
     this.baseUrl = 'https://api.henrikdev.xyz';
-    this.apiKey = process.env.HENRIKAPIKEY || process.env.henrikapikey || '';
+    this.apiKey = getHenrikApiKey();
+    this.revealedNames = new Map();
+    this.pendingNameLookups = new Set();
+    this.actPerformance = new Map();
+    this.pendingActLookups = new Set();
     this.rateLimitedUntil = 0;
     this.accountCache = new Map();
     this.requestQueue = Promise.resolve();
@@ -307,6 +317,71 @@ class HenrikService {
     return results;
   }
 
+  getCachedNamesAndQueueMissing(puuids, region = 'na') {
+    puuids
+      .filter((puuid) => !this.revealedNames.has(puuid) && !this.pendingNameLookups.has(puuid))
+      .forEach((puuid) => {
+        this.pendingNameLookups.add(puuid);
+        Promise.resolve(this.getAccountByPuuid(puuid, region))
+          .then((account) => {
+            if (account?.name) this.revealedNames.set(puuid, { name: account.name, tag: account.tag || '' });
+          })
+          .catch(() => null)
+          .finally(() => this.pendingNameLookups.delete(puuid));
+      });
+
+    return Object.fromEntries(
+      puuids.filter((puuid) => this.revealedNames.has(puuid)).map((puuid) => [puuid, this.revealedNames.get(puuid)])
+    );
+  }
+
+  async fetchStoredMatchesPage(puuid, region, page, mode = null) {
+    const modeFilter = mode ? `mode=${mode}&` : '';
+    const response = await this.queuedGet(
+      `${this.baseUrl}/valorant/v1/by-puuid/stored-matches/${region}/${puuid}?${modeFilter}size=${ACT_PAGE_SIZE}&page=${page}`
+    );
+    return {
+      matches: Array.isArray(response?.data?.data) ? response.data.data : [],
+      hasMore: Number(response?.data?.results?.after || 0) > 0
+    };
+  }
+
+  fetchStoredCompetitivePage(puuid, region, page) {
+    return this.fetchStoredMatchesPage(puuid, region, page, 'competitive');
+  }
+
+  async loadActPerformance(puuid, region, seasonId) {
+    const loadPage = async (page, collected) => {
+      const { matches, hasMore } = await this.fetchStoredCompetitivePage(puuid, region, page);
+      const all = [...collected, ...matches];
+      if (page >= MAX_ACT_PAGES || isActComplete({ matches, seasonId, hasMore })) return all;
+      return loadPage(page + 1, all);
+    };
+    return aggregateActPerformance(await loadPage(1, []), seasonId);
+  }
+
+  getCachedActPerformanceAndQueueMissing(puuids, region = 'na', seasonId = null) {
+    if (!seasonId) return {};
+    const keyFor = (puuid) => `${seasonId}:${puuid}`;
+    const fresh = (puuid) => (this.actPerformance.get(keyFor(puuid))?.expiresAt || 0) > Date.now();
+
+    puuids
+      .filter((puuid) => !fresh(puuid) && !this.pendingActLookups.has(keyFor(puuid)))
+      .forEach((puuid) => {
+        this.pendingActLookups.add(keyFor(puuid));
+        this.loadActPerformance(puuid, region, seasonId)
+          .then((value) => this.actPerformance.set(keyFor(puuid), { value, expiresAt: Date.now() + ACT_STATS_TTL_MS }))
+          .catch(() => null)
+          .finally(() => this.pendingActLookups.delete(keyFor(puuid)));
+      });
+
+    return Object.fromEntries(
+      puuids
+        .map((puuid) => [puuid, this.actPerformance.get(keyFor(puuid))?.value])
+        .filter(([, value]) => value)
+    );
+  }
+
   /**
    * Helper function for delays
    */
@@ -316,3 +391,4 @@ class HenrikService {
 }
 
 module.exports = new HenrikService();
+module.exports.HenrikService = HenrikService;

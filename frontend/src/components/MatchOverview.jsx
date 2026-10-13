@@ -1,4 +1,5 @@
 import PlayerCard from './PlayerCard';
+import MapBanner from './MapBanner';
 import './MatchOverview.css';
 
 function MatchOverview({ matchData, selectedWeapons = [] }) {
@@ -121,7 +122,7 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
         return name;
       }
     }
-    return 'Unknown Map';
+    return raw.split('/').filter(Boolean).pop() || 'Unknown Map';
   };
 
   // Get mode name
@@ -134,81 +135,67 @@ function MatchOverview({ matchData, selectedWeapons = [] }) {
     return 'Custom';
   };
 
+  const renderTeam = ({ title, color, players }) => (
+    <section className={`team-panel ${color}`} key={title}>
+      <header className="team-panel-header">
+        <span className="team-title"><i className={`team-indicator ${color}`} />{title}</span>
+        <span className="team-head-cols" aria-hidden="true">
+          <span>Rank</span>
+          <span title="Whole act once loaded. Hover a value for details.">K/D</span>
+          <span title="Whole act once loaded. Hover a value for details.">HS%</span>
+          <span title="This act">WR</span>
+          <span>Peak</span>
+          <span />
+        </span>
+      </header>
+      {players.map((player) => (
+        <PlayerCard key={player.puuid} player={player} selectedWeapons={selectedWeapons} />
+      ))}
+    </section>
+  );
+
   return (
     <div className="match-overview">
-      <div className="match-header">
-        <div className="map-info">
-          <h2>{getMapName(matchData.map)}</h2>
-          <p className="match-mode">{getModeName(matchData.mode)}</p>
+      <MapBanner mapPath={matchData.map}>
+        <div className="match-header">
+          <div className="map-info">
+            <div>
+              <p className="match-mode">{getModeName(matchData.mode)}</p>
+              <h2>{getMapName(matchData.map)}</h2>
+            </div>
+            <dl className="match-facts">
+              <div><dt>Round</dt><dd>{currentRound || '—'}</dd></div>
+              <div><dt>Players</dt><dd>{allPlayers.length}</dd></div>
+              <div><dt>Parties</dt><dd>{new Set(playersWithPartyBadges.filter((p) => p.partyId).map((p) => p.partyId)).size}</dd></div>
+              {userTeam && !isDeathmatchMode && (
+                <div>
+                  <dt>Your side</dt>
+                  <dd className="side-value">
+                    <i className={`side-dot ${userTeam.toLowerCase()}`} aria-hidden="true" />
+                    {userTeam === attackingTeamId ? 'Attacking' : 'Defending'}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
         </div>
-        
-        {/* Display which team user is on */}
-        {userTeam && !isDeathmatchMode && (
-          <div className={`user-team-indicator ${userTeam.toLowerCase()}`}>
-            <span className="team-label">You are on:</span>
-            <span className="team-name">
-              {userTeam === attackingTeamId ? 'ATTACKERS' : 'DEFENDERS'}
-            </span>
-          </div>
-        )}
-        
+      </MapBanner>
+
+      <div className="teams-wrap">
+      <div className={`teams-container ${isDeathmatchMode ? 'single' : ''}`}>
+        {isDeathmatchMode
+          ? renderTeam({ title: 'Free for all', color: 'neutral', players: allPlayers })
+          : (
+            <>
+              {renderTeam({ title: 'Attackers', color: attackingTeamId === 'Red' ? 'red' : 'blue', players: attackers })}
+              {renderTeam({ title: 'Defenders', color: defendingTeamId === 'Blue' ? 'blue' : 'red', players: defenders })}
+            </>
+          )}
       </div>
-
-      <div className="teams-container">
-        {isDeathmatchMode ? (
-          <div className="team">
-            <h3 className="team-header">Players ({allPlayers.length})</h3>
-            <div className="players-grid">
-              {allPlayers.map(player => (
-                <PlayerCard
-                  key={player.puuid}
-                  player={player}
-                  selectedWeapons={selectedWeapons}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Team Red */}
-            <div className={`team ${attackingTeamId === 'Red' ? 'team-red' : 'team-blue'}`}>
-              <h3 className="team-header">
-                <span className={`team-indicator ${attackingTeamId === 'Red' ? 'red' : 'blue'}`}></span>
-                Attackers ({attackers.length})
-              </h3>
-              <div className="players-grid">
-                {attackers.map(player => (
-                  <PlayerCard 
-                    key={player.puuid} 
-                    player={player}
-                    selectedWeapons={selectedWeapons}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Team Blue */}
-            <div className={`team ${defendingTeamId === 'Blue' ? 'team-blue' : 'team-red'}`}>
-              <h3 className="team-header">
-                <span className={`team-indicator ${defendingTeamId === 'Blue' ? 'blue' : 'red'}`}></span>
-                Defenders ({defenders.length})
-              </h3>
-              <div className="players-grid">
-                {defenders.map(player => (
-                  <PlayerCard 
-                    key={player.puuid} 
-                    player={player}
-                    selectedWeapons={selectedWeapons}
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       {matchData.cached && (
-        <p className="cache-notice">⚡ Showing cached data</p>
+        <p className="cache-notice">Showing cached data</p>
       )}
     </div>
   );

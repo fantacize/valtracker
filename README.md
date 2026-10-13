@@ -1,53 +1,47 @@
-# Valorant Tracker
+# Valorant Tracker Desktop
 
-Real-time Valorant tracker with skins, player stats, pregame, queue controls, and live match data.
+A local-first Windows desktop companion for VALORANT lobby, pregame, queue, loadout, rank, and live-match intelligence.
 
-## Stack
-- Backend: Node.js + Express (`backend`)
-- Frontend: React + Vite (`frontend`)
-- Desktop: Electron wrapper (`electron`)
+## Run
 
-## Data Sources
-- Local VALORANT client API (lockfile + local endpoints)
+Open `release/ValorantTracker.exe`. The app starts and manages its private local service automatically—there are no BAT launchers or separate backend windows.
+
+VALORANT and Riot Client must be running and signed in for live data.
+
+## Build
+
+Requirements:
+
+- Node.js
+- .NET 8 SDK or newer
+- Microsoft Edge WebView2 Runtime
+
+From the project root:
+
+```powershell
+npm run build
+```
+
+The build produces one distributable file:
+
+```text
+release/ValorantTracker.exe
+```
+
+## Development
+
+Run the services separately only while developing:
+
+```powershell
+npm run dev:backend
+npm run dev:frontend
+```
+
+The desktop release embeds the production frontend inside the packaged backend, then embeds that backend inside the self-contained WPF application.
+
+## Data sources
+
+- Local VALORANT client API
 - Henrik API
 - Tracker.gg API
 - valorant-api.com
-
-## Run (Dev)
-1. Backend
-```bat
-cd backend
-npm install
-npm run dev
-```
-2. Frontend
-```bat
-cd frontend
-npm install
-npm run dev
-```
-3. Open `http://localhost:5173`
-
-## Run (Packaged Backend)
-```bat
-build-exe.bat
-start-exe.bat
-```
-
-## Run (Electron)
-```bat
-npm install
-start-electron.bat
-```
-
-## Env (`backend/.env`)
-```env
-PORT=3000
-HENRIKAPIKEY=your_key
-TRACKERAPIKEY=your_key
-```
-
-## Notes
-- VALORANT and Riot Client must be running and logged in.
-- Backend uses yoinker-style runtime presence state tracking for menu/pregame/ingame transitions.
-- `start-exe.bat` now reuses an already running backend instance to avoid port conflicts.

@@ -1,199 +1,36 @@
-.live-scoreboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
+.live-scoreboard { display: grid; gap: 16px; }
 
-.live-scoreboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.2rem 1.5rem;
-  background: linear-gradient(135deg, rgba(11, 18, 26, 0.95), rgba(18, 26, 36, 0.9));
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
+.live-scoreboard-header { display: flex; align-items: center; gap: 24px; }
+.live-title-block { flex: 1; min-width: 0; }
+.live-title-block h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.live-location { margin-top: 2px; color: var(--muted); font-size: var(--text-sm); }
 
-.live-scoreboard-header h2 {
-  font-size: 1.4rem;
-}
+.live-match-facts { display: flex; gap: 24px; }
+.live-match-facts dt { color: var(--muted-2); font-size: var(--text-xs); }
+.live-match-facts dd { font-size: var(--text-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.live-scoreboard-header p {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.9rem;
-}
+.live-message { padding: 32px; color: var(--muted); text-align: center; border: 1px dashed var(--line); border-radius: var(--radius); }
+.live-message.error { color: var(--danger); border-color: rgba(248, 113, 113, 0.35); border-style: solid; }
 
-.live-meta {
-  margin-top: 0.25rem;
-  font-size: 0.82rem;
-  color: #9ac2ff !important;
-}
+.scoreboard-table { overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-panel); }
+.scoreboard-row { display: grid; grid-template-columns: minmax(200px, 1.5fr) 56px 84px 64px 40px 40px 110px minmax(180px, 1.6fr); align-items: center; gap: 0 8px; min-height: 42px; padding: 0 14px; font-size: var(--text-md); font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line-soft); }
+.scoreboard-row > span:not(:first-child):not(:last-child) { text-align: right; }
+.scoreboard-row > span:last-child { padding-left: 12px; }
+.scoreboard-row:not(.scoreboard-head):not(.team-banner):hover { background: var(--surface-2); }
+.scoreboard-head { min-height: 34px; color: var(--muted-2); font-size: var(--text-xs); font-weight: 600; background: var(--sidebar); }
+.scoreboard-team:last-child .scoreboard-row:last-child { border-bottom: 0; }
 
-.live-scoreboard-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
+.team-banner { min-height: 32px; color: var(--muted); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.team-banner span:first-child { display: flex; align-items: center; gap: 8px; }
+.team-banner i { width: 3px; height: 12px; background: var(--red); border-radius: 2px; }
+.team-banner.blue i { background: var(--blue); }
 
-.live-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-}
+.agent-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.agent-name { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.util-cell { color: var(--muted); }
+.weapons-cell { overflow: hidden; color: var(--muted); font-size: var(--text-sm); text-overflow: ellipsis; white-space: nowrap; }
 
-.live-tick {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.live-message {
-  padding: 1rem 1.2rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.live-message.error {
-  border-color: rgba(255, 70, 85, 0.3);
-  color: #ff9b9b;
-}
-
-.scoreboard-table {
-  background: rgba(6, 10, 15, 0.9);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.scoreboard-row {
-  display: grid;
-  grid-template-columns: 1.5fr 0.8fr 1fr 0.8fr 0.6fr 0.6fr 1fr 2.1fr;
-  gap: 0.4rem;
-  padding: 0.75rem 1rem;
-  align-items: center;
-  font-size: 0.85rem;
-}
-
-.team-banner {
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.team-banner.red {
-  background: rgba(255, 70, 85, 0.2);
-}
-
-.team-banner.blue {
-  background: rgba(70, 130, 255, 0.2);
-}
-
-.scoreboard-head {
-  background: rgba(255, 255, 255, 0.08);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.scoreboard-team.red .scoreboard-row {
-  background: linear-gradient(90deg, rgba(255, 70, 85, 0.14), rgba(255, 255, 255, 0));
-}
-
-.scoreboard-team.blue .scoreboard-row {
-  background: linear-gradient(90deg, rgba(70, 130, 255, 0.14), rgba(255, 255, 255, 0));
-}
-
-.scoreboard-row:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-
-.agent-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.agent-tag {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.55);
-  min-width: 48px;
-}
-
-.agent-name {
-  font-weight: 600;
-  color: #fff;
-}
-
-.fkfd-cell {
-  font-weight: 700;
-  color: #ffd27a;
-}
-
-.util-cell {
-  font-family: Consolas, 'Courier New', monospace;
-  letter-spacing: 0.2px;
-  color: #d8e8ff;
-  font-weight: 700;
-}
-
-.weapons-cell {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.78rem;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.kd-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.15rem;
-  font-weight: 600;
-}
-
-.kd-cell em {
-  font-style: normal;
-  color: #7cffb4;
-  font-size: 0.75rem;
-}
-
-.scoreboard-team.blue .kd-cell em {
-  color: #7cb7ff;
-}
-
-@media (max-width: 1100px) {
-  .scoreboard-row {
-    grid-template-columns: 1.3fr 0.75fr 0.9fr 0.75fr 0.6fr 0.6fr 0.9fr 1.6fr;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .scoreboard-row {
-    grid-template-columns: 1.3fr 0.75fr 0.9fr 0.7fr 0.6fr 0.6fr 1fr;
-  }
-
-  .scoreboard-row span:nth-child(n+7) {
-    display: none;
-  }
-}
-
-@media (max-width: 600px) {
-  .scoreboard-row {
-    grid-template-columns: 1.5fr 0.8fr 0.8fr;
-  }
-
-  .scoreboard-row span:nth-child(n+4) {
-    display: none;
-  }
+@media (max-width: 1050px) {
+  .live-scoreboard { overflow-x: auto; }
+  .scoreboard-table { min-width: 900px; }
 }

@@ -2,6 +2,11 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { findRiotIdInMatch } = require('./playerNames');
+const { aggregatePerformance, seasonWinRate } = require('./playerStats');
+const { isPartyQueueing, parseRiotQueueTime } = require('./partyQueue');
+
+const RECENT_MATCH_COUNT = 5;
 const lockfileService = require('./lockfile');
 
 const defaultSkinsCsvPath = path.resolve(__dirname, '..', '..', '..', 'valorant_skins_by_weapon.csv');
@@ -106,13 +111,20 @@ class ValorantService {
     this.routingCacheTs = 0;
     this.contentCache = null;
     this.contentCacheTs = 0;
+    this.clientVersionCache = null;
+    this.clientVersionCacheTs = 0;
     this.yoinkStatsCache = new Map();
+    this.matchDetailsCache = new Map();
     this.yoinkStatsInflight = new Map();
   }
 
   resetSessionCache() {
     this.currentPuuid = null;
     this.region = null;
+    this.routingCache = null;
+    this.routingCacheTs = 0;
+    this.clientVersionCache = null;
+    this.clientVersionCacheTs = 0;
   }
 
   /**
@@ -262,6 +274,37 @@ class ValorantService {
     return parts.join('-');
   }
 
+  async getClientVersionFromApi() {
+    const now = Date.now();
+    if (this.clientVersionCache && (now - this.clientVersionCacheTs) < 60 * 60 * 1000) {
+      return this.clientVersionCache;
+    }
+
+    try {
+      const response = await axios.get('https://valorant-api.com/v1/version', { timeout: 5000 });
+      const version = response?.data?.data?.riotClientVersion || null;
+      if (version) {
+        this.clientVersionCache = String(version).trim();
+        this.clientVersionCacheTs = now;
+        return this.clientVersionCache;
+      }
+    } catch (error) {
+      console.warn('Could not fetch client version from valorant-api:', error.message);
+    }
+
+    return null;
+  }
+
+  async getClientVersion() {
+    const fromLogs = this.getClientVersionFromLogs();
+    if (fromLogs) return fromLogs;
+
+    const fromApi = await this.getClientVersionFromApi();
+    if (fromApi) return fromApi;
+
+    return null;
+  }
+
   async getRiotTokens() {
     let last = null;
     for (let i = 0; i < 5; i += 1) {
@@ -297,7 +340,7 @@ class ValorantService {
       throw new Error('Could not get Riot tokens from local client');
     }
 
-    const clientVersion = this.getClientVersionFromLogs();
+    const clientVersion = await this.getClientVersion();
     const headers = {
       'Authorization': `Bearer ${tokens.accessToken}`,
       'X-Riot-Entitlements-JWT': tokens.entitlementsToken,
@@ -328,7 +371,7 @@ class ValorantService {
       throw new Error('Could not get Riot tokens from local client');
     }
 
-    const clientVersion = this.getClientVersionFromLogs();
+    const clientVersion = await this.getClientVersion();
     const headers = {
       'Authorization': `Bearer ${tokens.accessToken}`,
       'X-Riot-Entitlements-JWT': tokens.entitlementsToken,
@@ -401,7 +444,7 @@ class ValorantService {
       throw new Error('Could not get Riot tokens from local client');
     }
 
-    const clientVersion = this.getClientVersionFromLogs();
+    const clientVersion = await this.getClientVersion();
     const headers = {
       'Authorization': `Bearer ${tokens.accessToken}`,
       'X-Riot-Entitlements-JWT': tokens.entitlementsToken,
@@ -550,33 +593,16 @@ class ValorantService {
     return rankNamesByTier[idx] || 'Unranked';
   }
 
-  calculateHsAndKdFromMatch(matchData, puuid) {
-    let totalHits = 0;
-    let totalHeadshots = 0;
-    let kills = 0;
-    let deaths = 0;
-
-    for (const round of matchData?.roundResults || []) {
-      for (const player of round?.playerStats || []) {
-        if (player?.subject !== puuid) continue;
-        for (const dmg of player?.damage || []) {
-          totalHits += Number(dmg?.legshots || 0) + Number(dmg?.bodyshots || 0) + Number(dmg?.headshots || 0);
-          totalHeadshots += Number(dmg?.headshots || 0);
-        }
-      }
+  async getMatchDetailsCached(matchId) {
+    if (!matchId) return null;
+    if (this.matchDetailsCache.has(matchId)) return this.matchDetailsCache.get(matchId);
+    try {
+      const details = await this.makePdRequest(`/match-details/v1/matches/${matchId}`, 'get');
+      this.matchDetailsCache.set(matchId, details);
+      return details;
+    } catch {
+      return null;
     }
-
-    for (const player of matchData?.players || []) {
-      if (player?.subject !== puuid) continue;
-      kills = Number(player?.stats?.kills || 0);
-      deaths = Number(player?.stats?.deaths || 0);
-      break;
-    }
-
-    // Match yoink player_stats.py behavior: KD numeric, HS "N/A" if unavailable.
-    const kd = deaths > 0 ? Number((kills / deaths).toFixed(2)) : kills;
-    const hsPct = totalHits > 0 ? Math.round((totalHeadshots / totalHits) * 100) : 'N/A';
-    return { kd, hsPct };
   }
 
   async getYoinkStatsForPlayer(puuid) {
@@ -602,6 +628,8 @@ class ValorantService {
         games: 0,
         hsPct: 'N/A',
         kd: 'N/A',
+        riotId: null,
+        statMatches: 0,
         deltaRr: 'N/A',
         afkPenalty: 'N/A',
         rrHistory: [],
@@ -665,7 +693,7 @@ class ValorantService {
           const wins = Number(seasonData?.NumberOfWinsWithPlacements || 0);
           const games = Number(seasonData?.NumberOfGames || 0);
           out.games = games;
-          out.winRate = games === 0 ? 100 : Math.trunc((wins / games) * 100);
+          out.winRate = seasonWinRate({ wins, games });
         } catch {
           out.winRate = 'N/A';
         }
@@ -673,10 +701,9 @@ class ValorantService {
         // keep defaults
       }
 
-      // Direct port of yoink/src/player_stats.py
       try {
         const updates = await this.makePdRequest(
-          `/mmr/v1/players/${puuid}/competitiveupdates?startIndex=0&endIndex=1&queue=competitive`,
+          `/mmr/v1/players/${puuid}/competitiveupdates?startIndex=0&endIndex=${RECENT_MATCH_COUNT}&queue=competitive`,
           'get'
         );
         const matches = Array.isArray(updates?.Matches) ? updates.Matches : [];
@@ -684,7 +711,7 @@ class ValorantService {
           const latest = matches[0];
           out.deltaRr = latest?.RankedRatingEarned ?? 'N/A';
           out.afkPenalty = latest?.AFKPenalty ?? 'N/A';
-          out.rrHistory = matches.slice(0, 5).map((match) => ({
+          out.rrHistory = matches.map((match) => ({
             matchId: match?.MatchID || null,
             mapId: match?.MapID || null,
             seasonId: match?.SeasonID || null,
@@ -693,17 +720,14 @@ class ValorantService {
             afkPenalty: match?.AFKPenalty ?? null
           }));
 
-          if (latest?.MatchID) {
-            try {
-              const matchDetails = await this.makePdRequest(`/match-details/v1/matches/${latest.MatchID}`, 'get');
-              const perf = this.calculateHsAndKdFromMatch(matchDetails, puuid);
-              out.kd = perf.kd;
-              out.hsPct = perf.hsPct;
-            } catch {
-              out.kd = 'N/A';
-              out.hsPct = 'N/A';
-            }
-          }
+          const matchDetailsList = (await Promise.all(
+            matches.map((match) => this.getMatchDetailsCached(match?.MatchID))
+          )).filter(Boolean);
+          const performance = aggregatePerformance(matchDetailsList, puuid);
+          out.kd = performance.kd ?? 'N/A';
+          out.hsPct = performance.hsPct ?? 'N/A';
+          out.statMatches = performance.matches;
+          out.riotId = matchDetailsList.map((details) => findRiotIdInMatch(details, puuid)).find(Boolean) || null;
         }
       } catch {
         // keep defaults
@@ -749,7 +773,7 @@ class ValorantService {
       throw new Error('Could not get Riot tokens from local client');
     }
 
-    const clientVersion = this.getClientVersionFromLogs();
+    const clientVersion = await this.getClientVersion();
     const headers = {
       'Authorization': `Bearer ${tokens.accessToken}`,
       'X-Riot-Entitlements-JWT': tokens.entitlementsToken,
@@ -798,7 +822,7 @@ class ValorantService {
     ];
 
     for (const candidate of candidates) {
-      const ts = this.normalizeTimestamp(candidate);
+      const ts = parseRiotQueueTime(candidate) || this.normalizeTimestamp(candidate);
       if (ts) return ts;
     }
 
@@ -1097,8 +1121,8 @@ class ValorantService {
       partyId,
       queueId: party?.MatchmakingData?.QueueID || null,
       partyState: party?.State || null,
-      inQueue: Boolean(party?.MatchmakingData?.IsCurrentlyInQueue || party?.MatchmakingData?.QueueID),
-      queueStartedAt: this.extractQueueStartTime(party?.MatchmakingData || {}),
+      inQueue: isPartyQueueing(party),
+      queueStartedAt: isPartyQueueing(party) ? this.extractQueueStartTime(party?.MatchmakingData || {}) : null,
       partySize: Array.isArray(party?.Members) ? party.Members.length : null,
       leaderPuuid: party?.Leader || null,
       members: Array.isArray(party?.Members)

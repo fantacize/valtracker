@@ -1,4 +1,7 @@
 import './PregameLobby.css';
+import SeenTag from './SeenTag';
+import AgentAvatar from './AgentAvatar';
+import MapBanner from './MapBanner';
 
 function PregameLobby({ data }) {
   const mapCodenameToName = {
@@ -59,23 +62,28 @@ function PregameLobby({ data }) {
         return name;
       }
     }
-    return raw;
+    return raw.split('/').filter(Boolean).pop() || raw;
   };
 
   return (
     <div className="pregame-lobby">
-      <div className="pregame-header">
-        <h2>Pregame Lobby</h2>
-        <p>{getMapName(data.map)}</p>
-      </div>
+      <MapBanner mapPath={data.map}>
+        <div className="pregame-header">
+          <div>
+            <h2>{getMapName(data.map)}</h2>
+            <p>Agent select</p>
+          </div>
+          <div className="pregame-count"><strong>{(data.players || []).length}</strong><span>players</span></div>
+        </div>
+      </MapBanner>
       <div className="pregame-teams">
         {['Red', 'Blue'].map((team) => (
           <div key={team} className={`pregame-team ${team.toLowerCase()}`}>
-            <h3>{team === 'Red' ? 'Attackers' : 'Defenders'}</h3>
+            <h3><span>{team === 'Red' ? 'Attackers' : 'Defenders'}</span><small>{teams[team].length}/5</small></h3>
             {(teams[team] || []).map((player) => (
               <div className="pregame-player" key={player.puuid}>
-                <span className="pregame-agent">{player.agentName || 'No Agent'}</span>
-                <span className="pregame-name">{player.gameName}</span>
+                <AgentAvatar characterId={player.characterId} agentName={player.agentName} size={36} />
+                <span className="pregame-identity"><strong>{player.gameName ? `${player.gameName}#${player.tagLine}` : 'Hidden player'}{player.nameHidden && player.gameName && <span className="hidden-tag" title="Streamer mode is on. Name revealed by lookup.">hidden</span>}<SeenTag player={player} /></strong><small>{player.agentName || 'Choosing agent'}</small></span>
                 <span className={`pregame-state ${stateLabel(player.selectionState)}`}>
                   {stateLabel(player.selectionState)}
                 </span>
@@ -86,7 +94,7 @@ function PregameLobby({ data }) {
                     rel="noopener noreferrer"
                     className="pregame-vtl-link"
                   >
-                    VTL
+                    VTL ↗
                   </a>
                 )}
               </div>

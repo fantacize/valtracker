@@ -98,8 +98,9 @@ class CacheService {
 const cacheService = new CacheService();
 
 // Cleanup every 10 minutes
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   cacheService.cleanup();
 }, 10 * 60 * 1000);
+cleanupTimer.unref?.();
 
 module.exports = cacheService;
